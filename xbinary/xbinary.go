@@ -25,24 +25,20 @@ import (
 
 var (
 	InvalidLengthErr = errors.New("invalid length")
-
-	read1BytesPool = xbytes.GetNBytesPool(1)
-	read2BytesPool = xbytes.GetNBytesPool(2)
-	read4BytesPool = xbytes.GetNBytesPool(4)
 )
 
 func WriteUint16(w io.Writer, i uint16) error {
-	data := read2BytesPool.Get()
+	data := xbytes.MallocSize(4)
 	data[0] = byte(i >> 8)
 	data[1] = byte(i)
 	_, err := w.Write(data)
-	read2BytesPool.Put(data)
+	xbytes.Free(data)
 	return err
 }
 
 func ReadUint16(r io.Reader) (uint16, error) {
-	data := read2BytesPool.Get()
-	defer read2BytesPool.Put(data)
+	data := xbytes.MallocSize(2)
+	defer xbytes.Free(data)
 	n, err := r.Read(data)
 	if err != nil {
 		return 0, err
@@ -56,20 +52,20 @@ func ReadUint16(r io.Reader) (uint16, error) {
 //-----------------
 
 func WriteBool(w io.Writer, b bool) error {
-	data := read1BytesPool.Get()
+	data := xbytes.MallocSize(1)
 	if b {
 		data[0] = 1
 	} else {
 		data[0] = 0
 	}
 	_, err := w.Write(data)
-	read1BytesPool.Put(data)
+	xbytes.Free(data)
 	return err
 }
 
 func ReadBool(r io.Reader) (bool, error) {
-	b := read1BytesPool.Get()
-	defer read1BytesPool.Put(b)
+	b := xbytes.MallocSize(1)
+	defer xbytes.Free(b)
 	_, err := r.Read(b)
 	if err != nil {
 		return false, err
@@ -80,8 +76,8 @@ func ReadBool(r io.Reader) (bool, error) {
 //------------
 
 func ReadUint32(r io.Reader) (uint32, error) {
-	data := read4BytesPool.Get()
-	defer read4BytesPool.Put(data)
+	data := xbytes.MallocSize(4)
+	defer xbytes.Free(data)
 	n, err := r.Read(data)
 	if err != nil {
 		return 0, err
@@ -93,13 +89,13 @@ func ReadUint32(r io.Reader) (uint32, error) {
 }
 
 func WriteUint32(w io.Writer, i uint32) error {
-	data := read4BytesPool.Get()
+	data := xbytes.MallocSize(4)
 	data[0] = byte(i >> 24)
 	data[1] = byte(i >> 16)
 	data[2] = byte(i >> 8)
 	data[3] = byte(i)
 	_, err := w.Write(data)
-	read4BytesPool.Put(data)
+	xbytes.Free(data)
 	return err
 
 }
@@ -116,8 +112,8 @@ func WriteBytes(w io.Writer, s []byte) (err error) {
 }
 
 func ReadBytes(r io.Reader) (b []byte, err error) {
-	nBytes := read2BytesPool.Get()
-	defer read2BytesPool.Put(nBytes)
+	nBytes := xbytes.MallocSize(2)
+	defer xbytes.Free(nBytes)
 	_, err = io.ReadFull(r, nBytes)
 	if err != nil {
 		return nil, err
@@ -127,11 +123,10 @@ func ReadBytes(r io.Reader) (b []byte, err error) {
 	if length == 0 {
 		return nil, nil
 	}
-	pool := xbytes.GetNBytesPool(length)
-	payload := pool.Get()
+	payload := xbytes.MallocSize(length)
 	_, err = io.ReadFull(r, payload)
 	if err != nil {
-		pool.Put(payload)
+		xbytes.Free(payload)
 		return nil, err
 	}
 
