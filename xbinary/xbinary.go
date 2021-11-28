@@ -28,7 +28,7 @@ var (
 )
 
 func WriteUint16(w io.Writer, i uint16) error {
-	data := xbytes.MallocSize(4)
+	data := xbytes.MallocSize(2)
 	data[0] = byte(i >> 8)
 	data[1] = byte(i)
 	_, err := w.Write(data)
