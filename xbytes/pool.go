@@ -28,37 +28,39 @@ var (
 	singleFlight = &singleflight.Group{}
 )
 
-// GetNBytesPool returns a bytes sync.Pool.
-// It is recommended to use n Byte greater than or equal to 64.
-func GetNBytesPool(nBytes int) *Pool {
-	if nBytes < 0 {
-		panic("nBytes must be greater than or equal to 0")
+// Malloc returns a bytes of slice.
+func Malloc(size, capacity int) []byte {
+	c := size
+
+	if capacity > size {
+		c = capacity
 	}
-	pool, _, _ := singleFlight.Do(strconv.Itoa(nBytes), func() (interface{}, error) {
-		actual, _ := bytesPoolMap.ComputeIfAbsent(nBytes, func(key interface{}) interface{} {
-			return &Pool{n: nBytes, pool: &sync.Pool{New: func() interface{} {
-				return make([]byte, nBytes)
-			}}}
+
+	pool := getOrCreatePool(c)
+	return pool.Get().([]byte)[:size]
+}
+
+// MallocSize returns a bytes of slice.
+func MallocSize(size int) []byte {
+	return Malloc(size, size)
+}
+
+func getOrCreatePool(c int) *sync.Pool {
+	pool, _, _ := singleFlight.Do(strconv.Itoa(c), func() (interface{}, error) {
+		actual, _ := bytesPoolMap.ComputeIfAbsent(c, func(key interface{}) interface{} {
+			p := &sync.Pool{New: func() interface{} {
+				return make([]byte, 0, c)
+			}}
+			return p
 		})
 		return actual, nil
 	})
-	return pool.(*Pool)
+	return pool.(*sync.Pool)
 }
 
-// Pool Represents a pool of the same byte size.
-type Pool struct {
-	n    int
-	pool *sync.Pool
-}
-
-// Get Returns a bytes of slice.
-func (p *Pool) Get() (bytes []byte) {
-	return p.pool.Get().([]byte)
-}
-
-// Put Recovers a byte slice.
-func (p *Pool) Put(b []byte) {
-	if len(b) >= p.n {
-		p.pool.Put(b[:p.n])
-	}
+// Free recovers a bytes of slice.
+func Free(buf []byte) {
+	c := cap(buf)
+	pool := getOrCreatePool(c)
+	pool.Put(buf[:0])
 }

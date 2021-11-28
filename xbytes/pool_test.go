@@ -21,12 +21,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"sync"
-	"sync/atomic"
 	"testing"
 )
 
-func TestGetNBytesPool(t *testing.T) {
-	m := sync.Map{}
+func TestMalloc(t *testing.T) {
 	n := 100
 	waitGroup := sync.WaitGroup{}
 	for i := 0; i < n; i++ {
@@ -35,30 +33,18 @@ func TestGetNBytesPool(t *testing.T) {
 			defer waitGroup.Done()
 			k := j % 10
 			t.Run(fmt.Sprintf("%d bytes", k), func(t *testing.T) {
-				pool := GetNBytesPool(k)
-				value, _ := m.LoadOrStore(k, atomic.Value{})
-				v := value.(atomic.Value)
-				swap := v.CompareAndSwap(nil, pool)
-				b := pool.Get()
+				b := MallocSize(k)
 				assert.EqualValues(t, len(b), k)
-				if !swap {
-					assert.EqualValues(t, v.Load(), pool)
-				}
-				pool.Put(b)
+				Free(b)
 			})
 
 		}(i)
 	}
 	waitGroup.Wait()
 }
-func TestGetNBytesPool_Panic(t *testing.T) {
-	assert.Panics(t, func() {
-		GetNBytesPool(-1)
-	})
-}
+
 func BenchmarkMakeBytes(b *testing.B) {
 	b.ReportAllocs()
-	//n := 20
 	rand.Seed(2021)
 	b.ResetTimer()
 
@@ -85,8 +71,7 @@ func BenchmarkMakeBytes(b *testing.B) {
 
 }
 
-func BenchmarkGetNBytesPool(b *testing.B) {
-	//n := 20
+func BenchmarkMalloc(b *testing.B) {
 	rand.Seed(2021)
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -98,11 +83,10 @@ func BenchmarkGetNBytesPool(b *testing.B) {
 				k := 2 << j
 				waitGroup.Add(1)
 				b.StartTimer()
-				pool := GetNBytesPool(k)
 				go func() {
-					a := pool.Get()
+					a := MallocSize(k)
 					b.StopTimer()
-					pool.Put(a)
+					Free(a)
 					waitGroup.Done()
 					b.StartTimer()
 				}()
