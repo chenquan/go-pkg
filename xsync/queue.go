@@ -31,6 +31,7 @@ func WithQueueCap(cap int) QueueOption {
 		opt.cap = cap
 	}
 }
+
 func WithQueueMode(mode QueueMode) QueueOption {
 	return func(opt *QueueOptions) {
 		opt.mode = mode
@@ -42,6 +43,7 @@ func NewQueue(opts ...QueueOption) *Queue {
 
 	return &Queue{cond: sync.NewCond(&sync.Mutex{}), l: list.New(), cap: options.cap}
 }
+
 func loadQueueOpts(opts ...QueueOption) *QueueOptions {
 	opt := new(QueueOptions)
 	for _, option := range opts {
@@ -50,6 +52,7 @@ func loadQueueOpts(opts ...QueueOption) *QueueOptions {
 
 	return opt
 }
+
 func (q *Queue) Close() error {
 	q.cond.L.Lock()
 	q.l = nil
@@ -107,6 +110,7 @@ func (q *Queue) Cap(cap int) {
 	q.cap = cap
 	q.cond.L.Unlock()
 }
+
 func (q *Queue) Remove(v interface{}) (ok bool) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
