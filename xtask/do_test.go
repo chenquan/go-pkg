@@ -25,9 +25,13 @@ import (
 )
 
 func TestDoWithPanic(t *testing.T) {
+
 	assert.Panics(t, func() {
-		_ = DoWithTimeout(time.Millisecond*50, func() error {
-			panic("hello world!")
+		_ = DoWithTimeout(time.Second, func() (err error) {
+			time.Sleep(time.Second)
+			panic("")
+
+			return nil
 		})
 	})
 }

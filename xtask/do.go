@@ -42,6 +42,8 @@ func Do(ctx context.Context, do func() error) (err error) {
 	case p := <-panicChan:
 		panic(p)
 	case err = <-doneChan:
+		return
+	case <-ctx.Done():
 
 		select {
 		case p := <-panicChan:
@@ -49,11 +51,9 @@ func Do(ctx context.Context, do func() error) (err error) {
 		default:
 		}
 
-		return
-	case <-ctx.Done():
 		err = ctx.Err()
-		return
 	}
+	return
 }
 
 func DoWithTimeout(timeout time.Duration, do func() error) error {
