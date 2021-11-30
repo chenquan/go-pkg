@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	ErrDecodeChar = errors.New("error occurred on rune decoding")
+	ErrDecodeChar = errors.New("error occurred on char decoding")
 )
 
 // Char is rune Alias.
@@ -58,7 +58,7 @@ func PadLeftSpace(s string, size int) string {
 // PadRightChar right pad a string with a specified character in a larger string(specified size).
 // if the size is less than the param string, the param string is returned.
 // NOTE: size is unicode size.
-func PadRightChar(s string, size int, ch rune) string {
+func PadRightChar(s string, size int, ch Char) string {
 	return padCharLeftOrRight(s, size, ch, false)
 }
 
@@ -72,11 +72,12 @@ func PadRightSpace(s string, size int) string {
 // PadCenterChar center pad a string with a specified character in a larger string(specified size).
 // if the size is less than the param string, the param string is returned.
 // NOTE: size is unicode size.
-func PadCenterChar(s string, size int, ch rune) string {
+func PadCenterChar(s string, size int, ch Char) string {
 	if size <= 0 {
 		return s
 	}
-	length := utf8.RuneCountInString(s)
+
+	length := Len(s)
 	pads := size - length
 	if pads <= 0 {
 		return s
@@ -92,12 +93,13 @@ func PadCenterChar(s string, size int, ch rune) string {
 	if rightPads > 0 {
 		s = padRawRightChar(s, ch, rightPads)
 	}
+
 	return s
 }
 
 // PadCenterSpace center pad a string with space character(' ') in a larger string(specified size).
 // if the size is less than the param string, the param string is returned.
-// note: size is unicode size.
+// NOTE: size is unicode size.
 func PadCenterSpace(s string, size int) string {
 	return PadCenterChar(s, size, ' ')
 }
@@ -106,13 +108,16 @@ func padCharLeftOrRight(s string, size int, ch Char, isLeft bool) string {
 	if size <= 0 {
 		return s
 	}
-	pads := size - utf8.RuneCountInString(s)
+
+	pads := size - Len(s)
 	if pads <= 0 {
 		return s
 	}
+
 	if isLeft {
 		return padRawLeftChar(s, ch, pads)
 	}
+
 	return padRawRightChar(s, ch, pads)
 }
 
@@ -129,11 +134,13 @@ func RepeatChar(ch Char, repeat int) string {
 	if repeat <= 0 {
 		return ""
 	}
+
 	sb := strings.Builder{}
 	sb.Grow(repeat)
 	for i := 0; i < repeat; i++ {
 		sb.WriteRune(ch)
 	}
+
 	return sb.String()
 }
 
@@ -150,6 +157,7 @@ func RemoveChar(s string, rmVal Char) string {
 			sb.WriteRune(v)
 		}
 	}
+
 	return sb.String()
 }
 
@@ -158,6 +166,7 @@ func RemoveString(s, rmStr string) string {
 	if s == "" || rmStr == "" {
 		return s
 	}
+
 	return strings.ReplaceAll(s, rmStr, "")
 }
 
@@ -166,6 +175,7 @@ func Rotate(s string, shift int) string {
 	if shift == 0 {
 		return s
 	}
+
 	sLen := len(s)
 	if sLen == 0 {
 		return s
@@ -179,8 +189,9 @@ func Rotate(s string, shift int) string {
 	offset := -(shiftMod)
 	sb := strings.Builder{}
 	sb.Grow(sLen)
-	_, _ = sb.WriteString(SubStart(s, offset))
-	_, _ = sb.WriteString(Sub(s, 0, offset))
+	_, _ = sb.WriteString(Right(s, offset))
+	_, _ = sb.WriteString(Left(s, offset))
+
 	return sb.String()
 }
 
@@ -190,10 +201,16 @@ func Sub(s string, start, end int) string {
 	return sub(s, start, end)
 }
 
-// SubStart returns substring from specified string avoiding panics with start.
+// Left returns substring from specified string avoiding panics with start.
 // start, end are based on unicode(utf8) count.
-func SubStart(s string, start int) string {
-	return sub(s, start, math.MaxInt64)
+func Left(s string, end int) string {
+	return sub(s, 0, end)
+}
+
+// Right returns substring from specified string avoiding panics with end.
+// start, end are based on unicode(utf8) count.
+func Right(s string, start int) string {
+	return sub(s, start, math.MaxInt)
 }
 
 func sub(s string, start, end int) string {
@@ -201,7 +218,7 @@ func sub(s string, start, end int) string {
 		return ""
 	}
 
-	unicodeLen := utf8.RuneCountInString(s)
+	unicodeLen := Len(s)
 	// end
 	if end < 0 {
 		end += unicodeLen
@@ -240,15 +257,18 @@ func sub(s string, start, end int) string {
 		}
 		runeIndex++
 	}
+
 	return sb.String()
 }
 
 // MustReverse reverses a string, panics when error happens.
 func MustReverse(s string) string {
 	result, err := Reverse(s)
+
 	if err != nil {
 		panic(err)
 	}
+
 	return result
 }
 
@@ -257,19 +277,23 @@ func Reverse(s string) (string, error) {
 	if s == "" {
 		return s, nil
 	}
+
 	src := hack.StringToBytes(s)
 	dst := make([]byte, len(s))
 	srcIndex := len(s)
 	dstIndex := 0
 	for srcIndex > 0 {
 		r, n := utf8.DecodeLastRune(src[:srcIndex])
+
 		if r == utf8.RuneError {
 			return hack.BytesToString(dst), ErrDecodeChar
 		}
+
 		utf8.EncodeRune(dst[dstIndex:], r)
 		srcIndex -= n
 		dstIndex += n
 	}
+
 	return hack.BytesToString(dst), nil
 }
 
@@ -278,6 +302,7 @@ func Shuffle(s string) string {
 	if s == "" {
 		return s
 	}
+
 	runes := []rune(s)
 	index := 0
 	for i := len(runes) - 1; i > 0; i-- {
@@ -286,16 +311,22 @@ func Shuffle(s string) string {
 			runes[i], runes[index] = runes[index], runes[i]
 		}
 	}
+
 	return string(runes)
 }
 
 // ContainsAnySubstrings returns whether s contains any of substring in slice.
 func ContainsAnySubstrings(s string, subs []string) bool {
+	if len(subs) == 0 {
+		return false
+	}
+
 	for _, v := range subs {
 		if strings.Contains(s, v) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -304,11 +335,13 @@ func IsAlpha(s string) bool {
 	if s == empty {
 		return false
 	}
+
 	for _, v := range s {
 		if !unicode.IsLetter(v) {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -317,42 +350,46 @@ func IsAlphanumeric(s string) bool {
 	if s == empty {
 		return false
 	}
+
 	for _, v := range s {
 		if !isAlphanumeric(v) {
 			return false
 		}
 	}
+
 	return true
 }
 
-func isAlphanumeric(v rune) bool {
+func isAlphanumeric(v Char) bool {
 	return unicode.IsDigit(v) || unicode.IsLetter(v)
 }
 
-// IsNumeric Checks if the string contains only digits. A decimal point is not a digit and returns false.
+// IsNumeric checks if the string contains only digits. A decimal point is not a digit and returns false.
 func IsNumeric(s string) bool {
 	if s == empty {
 		return false
 	}
+
 	for _, v := range s {
 		if !unicode.IsDigit(v) {
 			return false
 		}
 	}
+
 	return true
 }
 
-// IsEmpty 判断字符串是否为空
+// IsEmpty returns ture if s is empty.
 func IsEmpty(s string) bool {
-	return len(s) == 0
+	return s == empty
 }
 
-// IsNotEmpty 判断字符串是否不为空
+// IsNotEmpty returns ture if s isn't empty.
 func IsNotEmpty(s string) bool {
 	return !IsEmpty(s)
 }
 
-// IsAnyEmpty 是否存在空字符串
+// IsAnyEmpty returns ture if strings exist empty of string.
 func IsAnyEmpty(strings ...string) bool {
 	if len(strings) == 0 {
 		return true
@@ -362,31 +399,36 @@ func IsAnyEmpty(strings ...string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-// IsNoneEmpty 判断是否不存在空字符串
+// IsNoneEmpty returns false if strings exist empty of string.
 func IsNoneEmpty(strings ...string) bool {
 	return !IsAnyEmpty(strings...)
 }
 
-// IsBlank 判断字符串为空或长度为0或由空白符(whitespace) 构成
+// IsBlank returns ture if the string is empty or has a length of 0 or consists of whitespace.
 func IsBlank(s string) bool {
-	runes := []rune(s)
-	for _, c := range runes {
+	if s == empty {
+		return true
+	}
+
+	for _, c := range s {
 		if !unicode.IsSpace(c) {
 			return false
 		}
 	}
+
 	return true
 }
 
-//IsNotBlank 判断字符串不为空或长度为0或由空白符(whitespace) 构成
+//IsNotBlank returns false if the string is empty or has a length of 0 or consists of whitespace.
 func IsNotBlank(s string) bool {
 	return !IsBlank(s)
 }
 
-// IsAnyBlank 判断字符串切片存在为空或长度为0或由空白符(whitespace) 构成的元素
+// IsAnyBlank returns true if there is a blank string in strings.
 func IsAnyBlank(strings ...string) bool {
 	if len(strings) == 0 {
 		return true
@@ -397,16 +439,18 @@ func IsAnyBlank(strings ...string) bool {
 			return true
 		}
 	}
+
 	return false
 
 }
 
-// IsNoneBlank 判断字符串切片不存在为空或长度为0或由空白符(whitespace) 构成的元素
+// IsNoneBlank returns true if there is no blank string in strings.
 func IsNoneBlank(strings ...string) bool {
 	return !IsAnyBlank(strings...)
 }
 
-// TrimSpace 返回字符串s的一部分，并删除了Unicode定义的所有首尾空格
+// TrimSpace returns a slice of the string s, with all leading
+// and trailing white space removed, as defined by Unicode.
 func TrimSpace(s string) string {
 	return strings.TrimSpace(s)
 }
@@ -417,115 +461,43 @@ func Trim(s string, cutSet string) string {
 	if IsEmpty(s) {
 		return s
 	}
+
 	return strings.Trim(s, cutSet)
 }
 
+// TrimLeft returns a slice of the string s with all leading
+// Unicode code points contained in cutset removed.
+//
+// To remove a prefix, use TrimPrefix instead.
 func TrimLeft(str string, stripStr string) string {
 	return strings.TrimLeft(str, stripStr)
 }
 
+// TrimRight returns a slice of the string s, with all trailing
+// Unicode code points contained in cutset removed.
+//
+// To remove a suffix, use TrimSuffix instead.
 func TrimRight(str string, stripStr string) string {
 	return strings.TrimRight(str, stripStr)
 }
 
-func TrimAll(strings []string, stripChars string) []string {
-	if len(strings) != 0 {
-		newStrings := make([]string, len(strings))
-		for i, s := range strings {
-			newStrings[i] = Trim(s, stripChars)
-		}
-		return newStrings
-	}
-	return strings
-}
-
+// Contains reports whether substr is within s.
 func Contains(s string, searchChar string) bool {
-	if IsEmpty(s) {
+	if s == empty {
 		return false
 	}
+
 	return strings.Contains(s, searchChar)
 }
 
-func SubstringStart(str string, start int) string {
-	strLen := len(str)
-	if start < 0 {
-		start += strLen
-	}
-	if start < 0 {
-		start = 0
-	}
-	if start > strLen {
-		return empty
-	} else {
-		return str[start:]
-	}
-}
-
-func Substring(str string, start int, end int) string {
-	runes := []rune(str)
-	strLen := len(runes)
-
-	if strLen == 0 {
-		return empty
-	}
-	if end < 0 {
-		end += strLen
-	}
-	if start < 0 {
-		start += strLen
-	}
-	if end > strLen {
-		end = strLen
-	}
-	if start > end {
-		return empty
-	} else {
-		if start < 0 {
-			start = 0
-		}
-		if end < 0 {
-			end = 0
-		}
-		return string(runes[start:end])
-	}
-}
-
-func Left(str string, n int) string {
-	if n < 0 {
-		return empty
-	} else {
-		runes := []rune(str)
-		if len(runes) < n {
-			return str
-		} else {
-			return string(runes[0:n])
-		}
-	}
-
-}
-
-// Right returns
-func Right(str string, n int) string {
-	if n <= 0 {
-		return empty
-	} else {
-		runes := []rune(str)
-		strLen := len(runes)
-		if strLen < n {
-			return str
-		} else {
-			return string(runes[strLen-n:])
-		}
-	}
-}
-
-// IsNumerical 是否数字
+// IsNumerical returns ture if a numerical.
 func IsNumerical(s string) bool {
 	reg, _ := regexp.Compile("^\\d+.?\\d*$")
 	return reg.MatchString(s)
 }
 
-// IndexOfDifference 匹配字符传切片中的元素是否存在相同子串
+// IndexOfDifference compares all strings in an array and returns the index at which the
+//   string begin to differ.
 func IndexOfDifference(strings ...string) int {
 	stringsLen := len(strings)
 	if len(strings) > 1 {
@@ -572,6 +544,8 @@ func IndexOfDifference(strings ...string) int {
 	}
 }
 
+// IndexOfDifferenceWithTwoStr Compares two string, and returns the index at which the
+// string begin to differ.
 func IndexOfDifferenceWithTwoStr(a, b string) int {
 	if a == b {
 		return indexNotFound
@@ -591,6 +565,10 @@ func IndexOfDifferenceWithTwoStr(a, b string) int {
 	}
 }
 
+// Difference Compares two Strings, and returns the portion where they differ.
+// More precisely, return the remainder of the second String,
+// starting from where it's different from the first. This means that
+// the difference between "abc" and "ab" is the empty String and not "c".
 func Difference(a, b string) string {
 	i := IndexOfDifferenceWithTwoStr(a, b)
 	if i == -1 {
@@ -614,31 +592,37 @@ func CommonPrefix(strings ...string) string {
 				return string(runes[0:smallestIndexOfDiff])
 			}
 		}
-
 	} else {
 		return empty
 	}
 }
 
+// Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
 func Index(s, substr string) int {
 	return strings.Index(s, substr)
 }
 
+// IndexAny returns the index of the first instance of any Unicode code point
+// from chars in s, or -1 if no Unicode code point from chars is present in s.
 func IndexAny(s, chars string) int {
 	return strings.IndexAny(s, chars)
 }
 
+// ContainsIgnoreCase checks if string contains a search string irrespective of case.
 func ContainsIgnoreCase(str, searchStr string) bool {
 	length := Len(searchStr)
 	max := Len(str) - length
+
 	for i := 0; i <= max; i++ {
 		if RegionMatches(str, true, i, searchStr, 0, length) {
 			return true
 		}
 	}
+
 	return false
 }
 
+// RegionMatches Green implementation of regionMatches.
 func RegionMatches(str string, ignoreCase bool, thisStart int, substr string, start int, length int) bool {
 	if ignoreCase {
 		str = strings.ToLower(str)
@@ -677,6 +661,7 @@ func RegionMatches(str string, ignoreCase bool, thisStart int, substr string, st
 		}
 		return false
 	}
+
 	return true
 }
 
@@ -685,10 +670,12 @@ func Len(str string) int {
 	return utf8.RuneCountInString(str)
 }
 
+// DefaultIfBlank returns default String if str is blank.
 func DefaultIfBlank(str, defaultStr string) string {
 	if IsBlank(str) {
 		return defaultStr
 	}
+
 	return str
 }
 
@@ -697,92 +684,104 @@ func DefaultIfEmpty(str, defaultStr string) string {
 	if IsEmpty(str) {
 		return defaultStr
 	}
+
 	return str
 }
 
+// DeleteWhitespace deletes whitespace.
 func DeleteWhitespace(str string) string {
-	if IsEmpty(str) {
-		return str
-	}
-	runes := []rune(str)
-	strLen := len(runes)
-	chars := make([]rune, 0, strLen)
-	for _, r := range runes {
-		if !unicode.IsSpace(r) {
-			chars = append(chars, r)
-		}
-	}
-	if len(chars) == strLen {
-		return str
-	}
-	if len(chars) == 0 {
+	if str == empty {
 		return empty
 	}
-	return string(chars)
+
+	strLen := Len(str)
+	builder := strings.Builder{}
+	builder.Grow(strLen)
+
+	for _, r := range str {
+		if !unicode.IsSpace(r) {
+			builder.WriteRune(r)
+		}
+	}
+
+	if builder.Len() == strLen {
+		return str
+	}
+
+	if builder.Len() == 0 {
+		return empty
+	}
+
+	return builder.String()
 }
 
+// EndsWith returns true if the str
 func EndsWith(str, suffix string, ignoreCase bool) bool {
 	if str == suffix {
 		return true
 	}
+
 	strLen := Len(str)
 	suffixLen := Len(suffix)
 	if suffixLen > strLen {
 		return false
 	}
 	strOffset := strLen - suffixLen
+
 	return RegionMatches(str, ignoreCase, strOffset, suffix, 0, suffixLen)
 }
 
+// EndsWithIgnoreCase case-insensitive check if a str ends with a specified suffix.
 func EndsWithIgnoreCase(str, suffix string) bool {
 	return EndsWith(str, suffix, true)
 }
 
+// EndsWithCase case-insensitive check if a str ends with a specified suffix.
 func EndsWithCase(str, suffix string) bool {
 	return EndsWith(str, suffix, false)
 }
 
+// EndsWithAny check if a sequence ends with any of an array of specified strings.
 func EndsWithAny(sequence string, searchStrings ...string) bool {
 	if IsEmpty(sequence) || len(searchStrings) == 0 {
 		return false
 	}
+
 	for _, str := range searchStrings {
 		if EndsWith(sequence, str, false) {
 			return true
 		}
 	}
+
 	return false
 }
 
-func equalsIgnoreCase(str1, str2 string) bool {
+// EqualsIgnoreCase returns true if the two strings are equal ignoring case.
+func EqualsIgnoreCase(str1, str2 string) bool {
 	if str1 == str2 {
 		return true
 	}
+
 	return RegionMatches(str1, true, 0, str2, 0, Len(str1))
 }
 
-func Equals(str1, str2 string) bool {
-	return str1 == str2
-}
-
-func EqualsAny(str1 string, searchStrings ...string) bool {
-	if len(searchStrings) != 0 {
-		for _, str2 := range searchStrings {
+// EqualsAny returns ture if str exists in strings.
+func EqualsAny(str1 string, strings ...string) bool {
+	if len(strings) != 0 {
+		for _, str2 := range strings {
 			if str1 == str2 {
 				return true
 			}
 		}
 	}
+
 	return false
 }
 
-func Bytes(s string) []byte {
-	return []byte(s)
-}
-
+// Abbreviate abbreviates a string using ellipses or another given string.
 func Abbreviate(str, abbrevMarker string, offset, maxWidth int) (string, error) {
 	if IsNotEmpty(str) && abbrevMarker == empty && maxWidth > 0 {
-		return Substring(str, 0, maxWidth), nil
+		return Sub(str, 0, maxWidth), nil
 	} else if IsAnyEmpty(str, abbrevMarker) {
 		// 其中有一个字符串为,则直接返回原字符串
 		return str, nil
@@ -805,17 +804,18 @@ func Abbreviate(str, abbrevMarker string, offset, maxWidth int) (string, error) 
 		offset = strLen - (maxWidth - abbrevMarkerLen)
 	}
 	if offset <= abbrevMarkerLen+1 {
-		return Substring(str, 0, maxWidth-abbrevMarkerLen) + abbrevMarker, nil
+		return Sub(str, 0, maxWidth-abbrevMarkerLen) + abbrevMarker, nil
 	}
 	if maxWidth < minAbbrevWidthOffset {
 		return empty, fmt.Errorf("minimum abbreviation width with offset is %d", minAbbrevWidthOffset)
 	}
 	if offset+maxWidth-abbrevMarkerLen < strLen {
-		substr, err := Abbreviate(Substring(str, 0, offset), abbrevMarker, 0, maxWidth-abbrevMarkerLen)
+		substr, err := Abbreviate(Sub(str, 0, offset), abbrevMarker, 0, maxWidth-abbrevMarkerLen)
 		if err == nil {
 			return abbrevMarker + substr, nil
 		}
 		return empty, err
 	}
-	return abbrevMarker + Substring(str, 0, strLen-(maxWidth-abbrevMarkerLen)), nil
+
+	return abbrevMarker + Sub(str, 0, strLen-(maxWidth-abbrevMarkerLen)), nil
 }

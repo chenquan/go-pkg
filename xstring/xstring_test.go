@@ -17,9 +17,7 @@
 package xstring
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -128,7 +126,7 @@ func TestLeft(t *testing.T) {
 				str: "你好！世界！",
 				n:   -1,
 			},
-			"",
+			"你好！世界",
 		},
 		{
 			"6",
@@ -171,154 +169,20 @@ func TestRight(t *testing.T) {
 				str: "你好！世界！",
 				n:   0,
 			},
-			"",
+			"你好！世界！",
 		}, {
 			"2",
 			args{
 				str: "你好！世界！",
 				n:   6,
 			},
-			"你好！世界！",
+			"",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Right(tt.args.str, tt.args.n); got != tt.want {
 				t.Errorf("Right() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSubstring(t *testing.T) {
-	type args struct {
-		str   string
-		start int
-		end   int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			"1",
-			args{
-				str:   "你好！世界！",
-				start: 0,
-				end:   0,
-			},
-			"",
-		}, {
-			"2",
-			args{
-				str:   "你好！世界！",
-				start: -1,
-				end:   -1,
-			},
-			"",
-		}, {
-			"3",
-			args{
-				str:   "你好！世界！",
-				start: -6,
-				end:   -6,
-			},
-			"",
-		}, {
-			"4",
-			args{
-				str:   "你好！世界！",
-				start: -7,
-				end:   -6,
-			},
-			"",
-		}, {
-			"5",
-			args{
-				str:   "你好！世界！",
-				start: -1000,
-				end:   -6,
-			},
-			"",
-		}, {
-			"6",
-			args{
-				str:   "你好！世界！",
-				start: -1000,
-				end:   -1,
-			},
-			"你好！世界",
-		}, {
-			"7",
-			args{
-				str:   "你好！世界！",
-				start: -1000,
-				end:   -4,
-			},
-			"你好",
-		}, {
-			"7",
-			args{
-				str:   "你好！世界！",
-				start: -1000,
-				end:   -4,
-			},
-			"你好",
-		}, {
-			"8",
-			args{
-				str:   "你好！世界！",
-				start: 1,
-				end:   -4,
-			},
-			"好",
-		}, {
-			"9",
-			args{
-				str:   "你好！世界！",
-				start: 1,
-				end:   2,
-			},
-			"好",
-		}, {
-			"9",
-			args{
-				str:   "你好！世界！",
-				start: 1,
-				end:   0,
-			},
-			"",
-		}, {
-			"10",
-			args{
-				str:   "",
-				start: 1,
-				end:   0,
-			},
-			"",
-		}, {
-			"10",
-			args{
-				str:   "abc",
-				start: 0,
-				end:   4,
-			},
-			"abc",
-		}, {
-			"11",
-			args{
-				str:   "abc",
-				start: -1000,
-				end:   -100,
-			},
-			"",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Substring(tt.args.str, tt.args.start, tt.args.end); got != tt.want {
-				t.Errorf("Substring() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -658,48 +522,6 @@ func TestStrip(t *testing.T) {
 	}
 }
 
-func TestStripAll(t *testing.T) {
-	type args struct {
-		strings    []string
-		stripChars string
-	}
-	tests := []struct {
-		name string
-		args args
-		want []string
-	}{
-		{
-			"1",
-			args{
-				strings:    []string{"! ss !", "ss !", " ! ! "},
-				stripChars: "!",
-			},
-			[]string{" ss ", "ss ", " ! ! "},
-		}, {
-			"2",
-			args{
-				strings:    []string{},
-				stripChars: "!",
-			},
-			[]string{},
-		}, {
-			"3",
-			args{
-				strings:    []string{"sdsd", "sda"},
-				stripChars: "!",
-			},
-			[]string{"sdsd", "sda"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := TrimAll(tt.args.strings, tt.args.stripChars); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TrimAll() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestStripEnd(t *testing.T) {
 	type args struct {
 		str        string
@@ -808,55 +630,6 @@ func TestStripStart(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := TrimLeft(tt.args.str, tt.args.stripChars); got != tt.want {
 				t.Errorf("TrimLeft() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSubstringStart(t *testing.T) {
-	type args struct {
-		str   string
-		start int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			"1",
-			args{
-				str:   "12345",
-				start: 1,
-			},
-			"2345",
-		}, {
-			"2",
-			args{
-				str:   "你好!",
-				start: -1,
-			},
-			"!",
-		}, {
-			"3",
-			args{
-				str:   "你好!",
-				start: 9,
-			},
-			"",
-		}, {
-			"4",
-			args{
-				str:   "你好!",
-				start: -9,
-			},
-			"你好!",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := SubstringStart(tt.args.str, tt.args.start); got != tt.want {
-				t.Errorf("SubstringStart() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1015,7 +788,6 @@ func BenchmarkLen(b *testing.B) {
 			Len(str)
 		}
 	}
-	fmt.Println(utf8.RuneLen('a'))
 }
 
 func TestAbbreviate(t *testing.T) {
@@ -1117,30 +889,6 @@ func TestAbbreviate(t *testing.T) {
 	}
 }
 
-func TestBytes(t *testing.T) {
-	type args struct {
-		s string
-	}
-	tests := []struct {
-		name string
-		args args
-		want []byte
-	}{
-		{
-			"1",
-			args{s: "123"},
-			[]byte("123"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Bytes(tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Bytes() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestEqualsAny(t *testing.T) {
 	type args struct {
 		str1          string
@@ -1175,48 +923,6 @@ func TestEqualsAny(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := EqualsAny(tt.args.str1, tt.args.searchStrings...); got != tt.want {
 				t.Errorf("EqualsAny() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestEquals(t *testing.T) {
-	type args struct {
-		str1 string
-		str2 string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			"1",
-			args{
-				str1: "",
-				str2: "",
-			},
-			true,
-		}, {
-			"2",
-			args{
-				str1: "1",
-				str2: "1",
-			},
-			true,
-		}, {
-			"3",
-			args{
-				str1: "我",
-				str2: "你",
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Equals(tt.args.str1, tt.args.str2); got != tt.want {
-				t.Errorf("Equals() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1264,8 +970,8 @@ func Test_equalsIgnoreCase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := equalsIgnoreCase(tt.args.str1, tt.args.str2); got != tt.want {
-				t.Errorf("equalsIgnoreCase() = %v, want %v", got, tt.want)
+			if got := EqualsIgnoreCase(tt.args.str1, tt.args.str2); got != tt.want {
+				t.Errorf("EqualsIgnoreCase() = %v, want %v", got, tt.want)
 			}
 		})
 	}
