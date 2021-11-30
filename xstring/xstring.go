@@ -189,8 +189,8 @@ func Rotate(s string, shift int) string {
 	offset := -(shiftMod)
 	sb := strings.Builder{}
 	sb.Grow(sLen)
-	_, _ = sb.WriteString(Left(s, offset))
 	_, _ = sb.WriteString(Right(s, offset))
+	_, _ = sb.WriteString(Left(s, offset))
 
 	return sb.String()
 }
