@@ -23,54 +23,34 @@ import (
 	"sync"
 )
 
-//type (
-//	Writer interface {
-//		Write(v interface{})
-//	}
-//
-//	WriteBarrier struct {
-//		channel chan<- interface{}
-//		ctx     context.Context
-//	}
-//)
-//
-//func NewWriteHarrier(channel chan<- interface{}, ctx context.Context) WriteBarrier {
-//	return WriteBarrier{
-//		channel: channel,
-//		ctx:     ctx,
-//	}
-//}
-//
-//func (w WriteBarrier) Write(v interface{}) {
-//	select {
-//	case <-w.ctx.Done():
-//		return
-//	default:
-//		w.channel <- v
-//	}
-//}
-
 type (
 	// GenerateFunc is used to let callers send elements into source.
 	GenerateFunc func(source chan<- interface{})
+
 	// MapFunc is used to do element processing and write the output to writer.
 	MapFunc func(item interface{}, writer xbarrier.Writer)
+
 	// ReducerFunc is used to reduce all the mapping output and write to writer,
 	// use cancel func to cancel the processing.
 	ReducerFunc func(pipe <-chan interface{}, writer xbarrier.Writer, cancel func(error))
-	Options     struct {
+
+	options struct {
 		workerSize int
 	}
-	Option func(opts *Options)
+
+	// Option defines the method to customize the mapreduce.
+	Option func(opts *options)
 )
 
+// WithWorkerSize customizes a mapreduce processing with given workers.
 func WithWorkerSize(workerSize int) Option {
-	return func(opts *Options) {
+	return func(opts *options) {
 		opts.workerSize = workerSize
 	}
 }
-func loadOption(opts ...Option) *Options {
-	opt := &Options{workerSize: 16}
+
+func loadOption(opts ...Option) *options {
+	opt := &options{workerSize: 16}
 
 	for _, option := range opts {
 		option(opt)
@@ -78,6 +58,7 @@ func loadOption(opts ...Option) *Options {
 	return opt
 }
 
+// Map maps all elements generated from given generate func, and returns an output channel.
 func Map(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts ...Option) <-chan interface{} {
 	option := loadOption(opts...)
 	source := buildSource(generateFunc)
@@ -87,6 +68,7 @@ func Map(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts .
 	return collector
 }
 
+// MapStream maps all elements generated from given generate func, and returns a xstream.Stream.
 func MapStream(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts ...Option) *xstream.Stream {
 	return xstream.Range(Map(ctx, generateFunc, mapFunc, opts...))
 }
@@ -102,7 +84,7 @@ func buildSource(generateFunc GenerateFunc) chan interface{} {
 	return source
 }
 
-func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, collector chan<- interface{}, option *Options) {
+func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, collector chan<- interface{}, option *options) {
 	waitGroup := sync.WaitGroup{}
 	defer func() {
 		waitGroup.Wait()
