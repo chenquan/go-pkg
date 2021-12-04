@@ -79,24 +79,31 @@ func (j *Joiner) WriteRune(r rune) (int, error) {
 	return n, nil
 }
 
+// WriteString appends the contents of s to b's buffer.
+// It returns the length of s and a nil error.
 func (j *Joiner) WriteString(s string) (int, error) {
 	j.tryWriteStep()
 	n, _ := j.b.WriteString(s)
 	return n, nil
 }
 
+// WriteByte appends the byte c to b's buffer.
+// The returned error is always nil.
 func (j *Joiner) WriteByte(b byte) error {
 	j.tryWriteStep()
 	_ = j.b.WriteByte(b)
 	return nil
 }
 
+// Write appends the contents of p to b's buffer.
+// Write always returns len(p), nil.
 func (j *Joiner) Write(p []byte) (int, error) {
 	j.tryWriteStep()
 	n, _ := j.b.Write(p)
 	return n, nil
 }
 
+// String returns the accumulated string.
 func (j *Joiner) String() string {
 	var s string
 	if j.b != nil {
@@ -114,6 +121,9 @@ func (j *Joiner) tryWriteStep() {
 	return
 }
 
+// Grow grows b's capacity, if necessary, to guarantee space for
+// another n bytes. After Grow(n), at least n bytes can be written to b
+// without another allocation. If n is negative, Grow panics.
 func (j *Joiner) Grow(n int) {
 	if j.b == nil {
 		j.b = &strings.Builder{}
@@ -121,6 +131,9 @@ func (j *Joiner) Grow(n int) {
 	j.b.Grow(n)
 }
 
+// Cap returns the capacity of the builder's underlying byte slice. It is the
+// total space allocated for the string being built and includes any bytes
+// already written.
 func (j *Joiner) Cap() int {
 	if j.b == nil {
 		return j.n
@@ -128,10 +141,14 @@ func (j *Joiner) Cap() int {
 	return j.b.Cap() + j.n
 }
 
+// Reset resets the Builder to be empty.
 func (j *Joiner) Reset() {
-	j.b = nil
+	if j.b != nil {
+		j.b.Reset()
+	}
 }
 
+// Len returns the len of accumulated string.
 func (j *Joiner) Len() int {
 	if j.b == nil {
 		return j.n

@@ -147,9 +147,9 @@ func TestJoiner_Grow(t *testing.T) {
 				t.Fatalf("growLen=%d: bad data written after Grow", growLen)
 			}
 		})
-		wantAllocs := 2
+		wantAllocs := 1
 		if growLen == 0 {
-			wantAllocs = 1
+			wantAllocs = 0
 		}
 		if g, w := int(allocs), wantAllocs; g != w {
 			t.Errorf("growLen=%d: got %d allocs during Write; want %v", growLen, g, w)
