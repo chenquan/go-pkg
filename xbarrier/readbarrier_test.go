@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-func TestReaderBarrier(t *testing.T) {
+func TestReadBarrier(t *testing.T) {
 	c := make(chan interface{}, 1)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
