@@ -18,50 +18,55 @@ package xmapreduce
 
 import (
 	"context"
-	"fmt"
 	"github.com/chenquan/go-pkg/xbarrier"
-	"github.com/chenquan/go-pkg/xstream"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestMap(t *testing.T) {
-	c := Map(context.Background(), func(source chan<- interface{}) {
-		for i := 0; i < 10; i++ {
-			source <- i
+	t.Run("normal", func(t *testing.T) {
+		c := Map(context.Background(), func(source chan<- interface{}) {
+			for i := 0; i < 10; i++ {
+				source <- i
+			}
+		}, func(item interface{}, writer xbarrier.Writer) {
+			writer.Write(item)
+		}, WithWorkerSize(1))
+		i := 0
+		for range c {
+			i++
 		}
-	}, func(item interface{}, writer xbarrier.Writer) {
-		i := item.(int)
-		for j := 0; j < i; j++ {
-			writer.Write(j)
-		}
-		//writer.Write(i)
-	}, WithWorkerSize(1))
+		assert.Equal(t, 10, i)
+	})
 
-	fmt.Println(xstream.Range(c).Count())
+	t.Run("cancel", func(t *testing.T) {
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		c := Map(ctx, func(source chan<- interface{}) {
+			for i := 0; i < 11; i++ {
+				source <- i
+				if i == 9 {
+					// Wait for data to be read.
+					time.Sleep(time.Second)
+					cancelFunc()
+				}
+			}
+		}, func(item interface{}, writer xbarrier.Writer) {
+			writer.Write(item)
+		}, WithWorkerSize(1))
+		i := 0
+		for range c {
+			i++
+		}
+		assert.Equal(t, 10, i)
+	})
 
 }
 
 func TestMapStream(t *testing.T) {
-	//MapStream(context.Background(),
-	//	func(source chan<- interface{}) {
-	//		for i := 0; i < 10; i++ {
-	//			source <- i
-	//		}
-	//	},
-	//	func(item interface{}, writer Writer) {
-	//		i := item.(int)
-	//		//for j := 0; j < i; j++ {
-	//		//	writer.Write(j)
-	//		//}
-	//		writer.Write(i)
-	//	},
-	//	WithWorkerSize(1),
-	//).ForeachOrdered(func(item interface{}) {
-	//	fmt.Println(item)
-	//})
-	//
+
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	MapStream(ctx,
+	count := MapStream(ctx,
 		func(source chan<- interface{}) {
 			for i := 0; i < 10; i++ {
 				source <- i
@@ -72,14 +77,10 @@ func TestMapStream(t *testing.T) {
 		},
 		func(item interface{}, writer xbarrier.Writer) {
 			i := item.(int)
-			//for j := 0; j < i; j++ {
-			//	writer.Write(j)
-			//}
 			writer.Write(i)
 		},
 		WithWorkerSize(1),
-	).ForeachOrdered(func(item interface{}) {
-		fmt.Println(item)
-	})
+	).Count()
 
+	assert.Equal(t, 4, count)
 }
