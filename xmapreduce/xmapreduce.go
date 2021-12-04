@@ -55,6 +55,7 @@ func loadOption(opts ...Option) *options {
 	for _, option := range opts {
 		option(opt)
 	}
+
 	return opt
 }
 
@@ -65,6 +66,7 @@ func Map(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts .
 
 	collector := make(chan interface{}, option.workerSize)
 	go doMap(ctx, mapFunc, source, collector, option)
+
 	return collector
 }
 
@@ -86,6 +88,7 @@ func buildSource(generateFunc GenerateFunc) chan interface{} {
 
 func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, collector chan<- interface{}, option *options) {
 	waitGroup := sync.WaitGroup{}
+
 	defer func() {
 		waitGroup.Wait()
 		close(collector)
@@ -103,12 +106,14 @@ func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, coll
 				<-workerChan
 				return
 			}
+
 			waitGroup.Add(1)
 			go func(value interface{}) {
 				defer func() {
 					waitGroup.Done()
 					<-workerChan
 				}()
+
 				mapFunc(value, writer)
 			}(item)
 		}
