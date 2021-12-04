@@ -18,6 +18,7 @@ package xstring
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -132,20 +133,23 @@ func TestJoiner_Len(t *testing.T) {
 func TestJoiner_Grow(t *testing.T) {
 	for _, growLen := range []int{0, 100, 1000, 10000, 100000} {
 		p := bytes.Repeat([]byte{'a'}, growLen)
+		var b = NewJoiner()
 		allocs := testing.AllocsPerRun(100, func() {
-			var b = NewJoiner()
+			b.Reset()
 			b.Grow(growLen) // should be only alloc, when growLen > 0
 			if b.Cap() < growLen {
 				t.Fatalf("growLen=%d: Cap() is lower than growLen", growLen)
 			}
 			_, _ = b.Write(p)
 			if b.String() != string(p) {
+				fmt.Println(b.String(), "  ", string(p))
+				fmt.Println(len(b.String()), "  ", len(string(p)))
 				t.Fatalf("growLen=%d: bad data written after Grow", growLen)
 			}
 		})
-		wantAllocs := 3
+		wantAllocs := 2
 		if growLen == 0 {
-			wantAllocs = 2
+			wantAllocs = 1
 		}
 		if g, w := int(allocs), wantAllocs; g != w {
 			t.Errorf("growLen=%d: got %d allocs during Write; want %v", growLen, g, w)
