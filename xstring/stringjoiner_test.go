@@ -24,31 +24,31 @@ import (
 )
 
 func TestJoiner_WriteString(t *testing.T) {
-	join := NewJoiner(WithJoin("(", ",", ")"))
+	join := NewJoiner(WithJoiner("(", ",", ")"))
 	_, _ = join.WriteString("1")
 	_, _ = join.WriteString("2")
 	_, _ = join.WriteString("3")
 	assert.Equal(t, "(1,2,3)", join.String())
 
-	join = NewJoiner(WithJoin("(", ",", ""))
+	join = NewJoiner(WithJoiner("(", ",", ""))
 	_, _ = join.WriteString("1")
 	_, _ = join.WriteString("2")
 	_, _ = join.WriteString("3")
 	assert.Equal(t, "(1,2,3", join.String())
 
-	join = NewJoiner(WithJoinStep("-"))
+	join = NewJoiner(WithJoinerStep("-"))
 	_, _ = join.WriteString("1")
 	_, _ = join.WriteString("2")
 	_, _ = join.WriteString("3")
 	assert.Equal(t, "1-2-3", join.String())
 
-	join = NewJoiner(WithJoinStep("-"), WithJoinPrefix("=>"))
+	join = NewJoiner(WithJoinerStep("-"), WithJoinerPrefix("=>"))
 	_, _ = join.WriteString("1")
 	_, _ = join.WriteString("2")
 	_, _ = join.WriteString("3")
 	assert.Equal(t, "=>1-2-3", join.String())
 
-	join = NewJoiner(WithJoinStep("-"), WithJoinPrefix("=>"), WithJoinSuffix("<===="))
+	join = NewJoiner(WithJoinerStep("-"), WithJoinerPrefix("=>"), WithJoinerSuffix("<===="))
 	_, _ = join.WriteString("1")
 	_, _ = join.WriteString("2")
 	_, _ = join.WriteString("3")
@@ -56,31 +56,31 @@ func TestJoiner_WriteString(t *testing.T) {
 }
 
 func TestJoiner_Write(t *testing.T) {
-	join := NewJoiner(WithJoin("(", ",", ")"))
+	join := NewJoiner(WithJoiner("(", ",", ")"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
 	assert.Equal(t, "(a,b,c)", join.String())
 
-	join = NewJoiner(WithJoin("(", ",", ""))
+	join = NewJoiner(WithJoiner("(", ",", ""))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
 	assert.Equal(t, "(a,b,c", join.String())
 
-	join = NewJoiner(WithJoinStep("000"))
+	join = NewJoiner(WithJoinerStep("000"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
 	assert.Equal(t, "a000b000c", join.String())
 
-	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"))
+	join = NewJoiner(WithJoinerStep("1"), WithJoinerPrefix("--"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
 	assert.Equal(t, "--a1b1c", join.String())
 
-	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"), WithJoinSuffix("<---"))
+	join = NewJoiner(WithJoinerStep("1"), WithJoinerPrefix("--"), WithJoinerSuffix("<---"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
@@ -88,31 +88,31 @@ func TestJoiner_Write(t *testing.T) {
 
 }
 func TestJoiner_WriteRune(t *testing.T) {
-	join := NewJoiner(WithJoin("(", ",", ")"))
+	join := NewJoiner(WithJoiner("(", ",", ")"))
 	_, _ = join.WriteRune('a')
 	_, _ = join.WriteRune('b')
 	_, _ = join.WriteRune('c')
 	assert.Equal(t, "(a,b,c)", join.String())
 
-	join = NewJoiner(WithJoin("(", ",", ""))
+	join = NewJoiner(WithJoiner("(", ",", ""))
 	_, _ = join.WriteRune('a')
 	_, _ = join.WriteRune('b')
 	_, _ = join.WriteRune('c')
 	assert.Equal(t, "(a,b,c", join.String())
 
-	join = NewJoiner(WithJoinStep("000"))
+	join = NewJoiner(WithJoinerStep("000"))
 	_, _ = join.WriteRune('a')
 	_, _ = join.WriteRune('b')
 	_, _ = join.WriteRune('c')
 	assert.Equal(t, "a000b000c", join.String())
 
-	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"))
+	join = NewJoiner(WithJoinerStep("1"), WithJoinerPrefix("--"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
 	assert.Equal(t, "--a1b1c", join.String())
 
-	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"), WithJoinSuffix("<---"))
+	join = NewJoiner(WithJoinerStep("1"), WithJoinerPrefix("--"), WithJoinerSuffix("<---"))
 	_ = join.WriteByte('a')
 	_ = join.WriteByte('b')
 	_ = join.WriteByte('c')
@@ -121,7 +121,7 @@ func TestJoiner_WriteRune(t *testing.T) {
 }
 
 func TestJoiner_Len(t *testing.T) {
-	join := NewJoiner(WithJoin("(", ",", ")"))
+	join := NewJoiner(WithJoiner("(", ",", ")"))
 	assert.Equal(t, 2, join.Len())
 	_, _ = join.WriteRune('a')
 	_, _ = join.WriteRune('b')
@@ -158,7 +158,7 @@ func TestJoiner_Grow(t *testing.T) {
 }
 
 func BenchmarkNewJoin(b *testing.B) {
-	join := NewJoiner(WithJoin("(", ",", ")"))
+	join := NewJoiner(WithJoiner("(", ",", ")"))
 	for i := 0; i < b.N; i++ {
 		_, _ = join.WriteString("1")
 		_, _ = join.WriteString("2")

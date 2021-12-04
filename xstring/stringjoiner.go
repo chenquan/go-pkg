@@ -19,63 +19,76 @@ package xstring
 import "strings"
 
 type (
+	// Joiner is used to construct a sequence of characters separated by a delimiter and optionally starting with a supplied prefix and ending with a supplied suffix.
 	Joiner struct {
 		b    *strings.Builder
-		opts *JoinerOptions
+		opts *joinerOptions
 		n    int // n is length of prefix and suffix for
 	}
-	JoinerOptions struct {
+	// joinerOptions a option.
+	joinerOptions struct {
 		prefix string
 		step   string
 		suffix string
 	}
-	JoinerOption func(*JoinerOptions)
+
+	JoinerOption func(*joinerOptions)
 )
 
-func WithJoinStep(step string) JoinerOption {
-	return func(options *JoinerOptions) {
+// WithJoinerStep returns a JoinerOption with step settings.
+func WithJoinerStep(step string) JoinerOption {
+	return func(options *joinerOptions) {
 		options.step = step
 	}
 }
 
-func WithJoinPrefix(prefix string) JoinerOption {
-	return func(options *JoinerOptions) {
+// WithJoinerPrefix returns a JoinerOption with prefix settings.
+func WithJoinerPrefix(prefix string) JoinerOption {
+	return func(options *joinerOptions) {
 		options.prefix = prefix
 	}
 }
 
-func WithJoinSuffix(suffix string) JoinerOption {
-	return func(options *JoinerOptions) {
+// WithJoinerSuffix returns a JoinerOption with suffix settings.
+func WithJoinerSuffix(suffix string) JoinerOption {
+	return func(options *joinerOptions) {
 		options.suffix = suffix
 	}
 }
 
-func WithJoin(prefix, step, suffix string) JoinerOption {
-	return func(options *JoinerOptions) {
+// WithJoiner returns a JoinerOption with prefix, step and suffix settings.
+func WithJoiner(prefix, step, suffix string) JoinerOption {
+	return func(options *joinerOptions) {
 		options.prefix = prefix
 		options.step = step
 		options.suffix = suffix
 	}
 }
 
+// NewJoiner returns a Joiner.
 func NewJoiner(opts ...JoinerOption) *Joiner {
 	j := &Joiner{}
 	j.loadOpts(opts...)
+
 	return j
 }
 
 func (j *Joiner) loadOpts(opts ...JoinerOption) {
-	op := new(JoinerOptions)
+	op := new(joinerOptions)
 	for _, opt := range opts {
 		opt(op)
 	}
+
 	j.opts = op
 	j.n = len(op.prefix) + len(op.suffix)
 }
 
+// WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
+// It returns the length of r and a nil error.
 func (j *Joiner) WriteRune(r rune) (int, error) {
 	j.tryWriteStep()
 	n, _ := j.b.WriteRune(r)
+
 	return n, nil
 }
 
@@ -84,6 +97,7 @@ func (j *Joiner) WriteRune(r rune) (int, error) {
 func (j *Joiner) WriteString(s string) (int, error) {
 	j.tryWriteStep()
 	n, _ := j.b.WriteString(s)
+
 	return n, nil
 }
 
@@ -92,6 +106,7 @@ func (j *Joiner) WriteString(s string) (int, error) {
 func (j *Joiner) WriteByte(b byte) error {
 	j.tryWriteStep()
 	_ = j.b.WriteByte(b)
+
 	return nil
 }
 
@@ -100,6 +115,7 @@ func (j *Joiner) WriteByte(b byte) error {
 func (j *Joiner) Write(p []byte) (int, error) {
 	j.tryWriteStep()
 	n, _ := j.b.Write(p)
+
 	return n, nil
 }
 
@@ -109,6 +125,7 @@ func (j *Joiner) String() string {
 	if j.b != nil {
 		s = j.b.String()
 	}
+
 	return j.opts.prefix + s + j.opts.suffix
 }
 
@@ -118,7 +135,6 @@ func (j *Joiner) tryWriteStep() {
 	} else {
 		j.b.WriteString(j.opts.step)
 	}
-	return
 }
 
 // Grow grows b's capacity, if necessary, to guarantee space for
@@ -128,6 +144,7 @@ func (j *Joiner) Grow(n int) {
 	if j.b == nil {
 		j.b = &strings.Builder{}
 	}
+
 	j.b.Grow(n)
 }
 
@@ -138,6 +155,7 @@ func (j *Joiner) Cap() int {
 	if j.b == nil {
 		return j.n
 	}
+
 	return j.b.Cap() + j.n
 }
 
