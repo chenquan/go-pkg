@@ -16,7 +16,7 @@
  *
  */
 
-package stream
+package xstream
 
 import (
 	"github.com/stretchr/testify/assert"

@@ -16,7 +16,7 @@
  *
  */
 
-package stream
+package xstream
 
 // Options defines the struct to customize a Stream.
 type Options struct {
