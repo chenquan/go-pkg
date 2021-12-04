@@ -20,9 +20,9 @@ import "strings"
 
 type (
 	Joiner struct {
-		b        strings.Builder
-		notEmpty bool
-		opts     *JoinerOptions
+		b    *strings.Builder
+		opts *JoinerOptions
+		n    int // n is length of prefix and suffix for
 	}
 	JoinerOptions struct {
 		prefix string
@@ -58,7 +58,7 @@ func WithJoin(prefix, step, suffix string) JoinerOption {
 	}
 }
 
-func NewJoin(opts ...JoinerOption) *Joiner {
+func NewJoiner(opts ...JoinerOption) *Joiner {
 	j := &Joiner{}
 	j.loadOpts(opts...)
 	return j
@@ -70,6 +70,7 @@ func (j *Joiner) loadOpts(opts ...JoinerOption) {
 		opt(op)
 	}
 	j.opts = op
+	j.n = len(op.prefix) + len(op.suffix)
 }
 
 func (j *Joiner) WriteRune(r rune) (int, error) {
@@ -97,23 +98,44 @@ func (j *Joiner) Write(p []byte) (int, error) {
 }
 
 func (j *Joiner) String() string {
-	return j.opts.prefix + j.b.String() + j.opts.suffix
+	var s string
+	if j.b != nil {
+		s = j.b.String()
+	}
+	return j.opts.prefix + s + j.opts.suffix
 }
 
 func (j *Joiner) tryWriteStep() {
-	if j.notEmpty {
-		j.b.WriteString(j.opts.step)
+	if j.b == nil {
+		j.b = &strings.Builder{}
 	} else {
-		j.notEmpty = true
+		j.b.WriteString(j.opts.step)
 	}
 	return
 }
 
 func (j *Joiner) Grow(n int) {
-	n = n - len(j.opts.prefix) - len(j.opts.suffix)
+	if j.b == nil {
+		j.b = &strings.Builder{}
+	}
 	j.b.Grow(n)
 }
 
+func (j *Joiner) Cap() int {
+	if j.b == nil {
+		return j.n
+	}
+	return j.b.Cap() + j.n
+}
+
+func (j *Joiner) Reset() {
+	j.b = nil
+}
+
 func (j *Joiner) Len() int {
-	return len(j.opts.prefix) + j.b.Len() + len(j.opts.suffix)
+	if j.b == nil {
+		return j.n
+	}
+
+	return j.b.Len() + j.n
 }

@@ -17,47 +17,163 @@
 package xstring
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestJoiner(t *testing.T) {
-	join := NewJoin(WithJoin("(", ",", ")"))
-	join.WriteString("1")
-	join.WriteString("2")
-	join.WriteString("3")
+func TestJoiner_WriteString(t *testing.T) {
+	join := NewJoiner(WithJoin("(", ",", ")"))
+	_, _ = join.WriteString("1")
+	_, _ = join.WriteString("2")
+	_, _ = join.WriteString("3")
 	assert.Equal(t, "(1,2,3)", join.String())
 
-	join = NewJoin(WithJoin("(", ",", ""))
-	join.WriteString("1")
-	join.WriteString("2")
-	join.WriteString("3")
+	join = NewJoiner(WithJoin("(", ",", ""))
+	_, _ = join.WriteString("1")
+	_, _ = join.WriteString("2")
+	_, _ = join.WriteString("3")
 	assert.Equal(t, "(1,2,3", join.String())
 
-	join = NewJoin(WithJoinStep("-"))
-	join.WriteString("1")
-	join.WriteString("2")
-	join.WriteString("3")
+	join = NewJoiner(WithJoinStep("-"))
+	_, _ = join.WriteString("1")
+	_, _ = join.WriteString("2")
+	_, _ = join.WriteString("3")
 	assert.Equal(t, "1-2-3", join.String())
 
-	join = NewJoin(WithJoinStep("-"), WithJoinPrefix("=>"))
-	join.WriteString("1")
-	join.WriteString("2")
-	join.WriteString("3")
+	join = NewJoiner(WithJoinStep("-"), WithJoinPrefix("=>"))
+	_, _ = join.WriteString("1")
+	_, _ = join.WriteString("2")
+	_, _ = join.WriteString("3")
 	assert.Equal(t, "=>1-2-3", join.String())
 
-	join = NewJoin(WithJoinStep("-"), WithJoinPrefix("=>"), WithJoinSuffix("<===="))
-	join.WriteString("1")
-	join.WriteString("2")
-	join.WriteString("3")
+	join = NewJoiner(WithJoinStep("-"), WithJoinPrefix("=>"), WithJoinSuffix("<===="))
+	_, _ = join.WriteString("1")
+	_, _ = join.WriteString("2")
+	_, _ = join.WriteString("3")
 	assert.Equal(t, "=>1-2-3<====", join.String())
+}
+
+func TestJoiner_Write(t *testing.T) {
+	join := NewJoiner(WithJoin("(", ",", ")"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "(a,b,c)", join.String())
+
+	join = NewJoiner(WithJoin("(", ",", ""))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "(a,b,c", join.String())
+
+	join = NewJoiner(WithJoinStep("000"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "a000b000c", join.String())
+
+	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "--a1b1c", join.String())
+
+	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"), WithJoinSuffix("<---"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "--a1b1c<---", join.String())
 
 }
-func BenchmarkNewJoin(b *testing.B) {
-	join := NewJoin(WithJoin("(", ",", ")"))
-	for i := 0; i < b.N; i++ {
-		join.WriteString("1")
-		join.WriteString("2")
-		join.WriteString("3")
+func TestJoiner_WriteRune(t *testing.T) {
+	join := NewJoiner(WithJoin("(", ",", ")"))
+	_, _ = join.WriteRune('a')
+	_, _ = join.WriteRune('b')
+	_, _ = join.WriteRune('c')
+	assert.Equal(t, "(a,b,c)", join.String())
+
+	join = NewJoiner(WithJoin("(", ",", ""))
+	_, _ = join.WriteRune('a')
+	_, _ = join.WriteRune('b')
+	_, _ = join.WriteRune('c')
+	assert.Equal(t, "(a,b,c", join.String())
+
+	join = NewJoiner(WithJoinStep("000"))
+	_, _ = join.WriteRune('a')
+	_, _ = join.WriteRune('b')
+	_, _ = join.WriteRune('c')
+	assert.Equal(t, "a000b000c", join.String())
+
+	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "--a1b1c", join.String())
+
+	join = NewJoiner(WithJoinStep("1"), WithJoinPrefix("--"), WithJoinSuffix("<---"))
+	_ = join.WriteByte('a')
+	_ = join.WriteByte('b')
+	_ = join.WriteByte('c')
+	assert.Equal(t, "--a1b1c<---", join.String())
+
+}
+
+func TestJoiner_Len(t *testing.T) {
+	join := NewJoiner(WithJoin("(", ",", ")"))
+	assert.Equal(t, 2, join.Len())
+	_, _ = join.WriteRune('a')
+	_, _ = join.WriteRune('b')
+	_, _ = join.WriteRune('c')
+	assert.Equal(t, 7, join.Len())
+	assert.Equal(t, len(join.String()), join.Len())
+}
+
+func TestJoiner_Grow(t *testing.T) {
+	for _, growLen := range []int{0, 100, 1000, 10000, 100000} {
+		p := bytes.Repeat([]byte{'a'}, growLen)
+		allocs := testing.AllocsPerRun(100, func() {
+			var b = NewJoiner()
+			b.Grow(growLen) // should be only alloc, when growLen > 0
+			if b.Cap() < growLen {
+				t.Fatalf("growLen=%d: Cap() is lower than growLen", growLen)
+			}
+			_, _ = b.Write(p)
+			if b.String() != string(p) {
+				t.Fatalf("growLen=%d: bad data written after Grow", growLen)
+			}
+		})
+		wantAllocs := 3
+		if growLen == 0 {
+			wantAllocs = 2
+		}
+		if g, w := int(allocs), wantAllocs; g != w {
+			t.Errorf("growLen=%d: got %d allocs during Write; want %v", growLen, g, w)
+		}
 	}
+}
+
+func BenchmarkNewJoin(b *testing.B) {
+	join := NewJoiner(WithJoin("(", ",", ")"))
+	for i := 0; i < b.N; i++ {
+		_, _ = join.WriteString("1")
+		_, _ = join.WriteString("2")
+		_, _ = join.WriteString("3")
+	}
+}
+
+func TestJoiner_Cap(t *testing.T) {
+	join := NewJoiner()
+	assert.Equal(t, 0, join.Cap())
+	_, _ = join.WriteString("1")
+	assert.Equal(t, 8, join.Cap())
+}
+
+func TestJoiner_Reset(t *testing.T) {
+	join := NewJoiner()
+	assert.Equal(t, 0, join.Cap())
+	_, _ = join.WriteString("111")
+	assert.Equal(t, 8, join.Cap())
+	join.Reset()
+	assert.Equal(t, 0, join.Cap())
 }
