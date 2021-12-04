@@ -18,45 +18,46 @@ package xmapreduce
 
 import (
 	"context"
+	"github.com/chenquan/go-pkg/xbarrier"
 	"github.com/chenquan/go-pkg/xstream"
 	"sync"
 )
 
-type (
-	Writer interface {
-		Write(v interface{})
-	}
-
-	GuardedWriter struct {
-		channel chan<- interface{}
-		ctx     context.Context
-	}
-)
-
-func NewGuardedWriter(channel chan<- interface{}, ctx context.Context) GuardedWriter {
-	return GuardedWriter{
-		channel: channel,
-		ctx:     ctx,
-	}
-}
-
-func (gw GuardedWriter) Write(v interface{}) {
-	select {
-	case <-gw.ctx.Done():
-		return
-	default:
-		gw.channel <- v
-	}
-}
+//type (
+//	Writer interface {
+//		Write(v interface{})
+//	}
+//
+//	WriteBarrier struct {
+//		channel chan<- interface{}
+//		ctx     context.Context
+//	}
+//)
+//
+//func NewWriteHarrier(channel chan<- interface{}, ctx context.Context) WriteBarrier {
+//	return WriteBarrier{
+//		channel: channel,
+//		ctx:     ctx,
+//	}
+//}
+//
+//func (w WriteBarrier) Write(v interface{}) {
+//	select {
+//	case <-w.ctx.Done():
+//		return
+//	default:
+//		w.channel <- v
+//	}
+//}
 
 type (
 	// GenerateFunc is used to let callers send elements into source.
 	GenerateFunc func(source chan<- interface{})
 	// MapFunc is used to do element processing and write the output to writer.
-	MapFunc func(item interface{}, writer Writer)
+	MapFunc func(item interface{}, writer xbarrier.Writer)
 	// ReducerFunc is used to reduce all the mapping output and write to writer,
 	// use cancel func to cancel the processing.
-	ReducerFunc func(pipe <-chan interface{}, writer Writer, cancel func(error))
+	ReducerFunc func(pipe <-chan interface{}, writer xbarrier.Writer, cancel func(error))
 	Options     struct {
 		workerSize int
 	}
@@ -109,7 +110,7 @@ func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, coll
 	}()
 
 	workerChan := make(chan struct{}, option.workerSize)
-	writer := NewGuardedWriter(collector, ctx)
+	writer := xbarrier.NewWriteBarrier(ctx, collector)
 	for {
 		select {
 		case <-ctx.Done():

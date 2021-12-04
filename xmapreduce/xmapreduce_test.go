@@ -19,42 +19,17 @@ package xmapreduce
 import (
 	"context"
 	"fmt"
+	"github.com/chenquan/go-pkg/xbarrier"
 	"github.com/chenquan/go-pkg/xstream"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-func TestGuardedWriter(t *testing.T) {
-	c := make(chan interface{}, 1)
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	writer := NewGuardedWriter(c, ctx)
-	go func() {
-		for i := 0; i < 11; i++ {
-			writer.Write(1)
-			if i == 9 {
-				cancelFunc()
-			}
-		}
-	}()
-
-	idx := 0
-	for i := 0; i < 11; i++ {
-		select {
-		case v := <-c:
-			idx += v.(int)
-		default:
-
-		}
-	}
-	assert.Equal(t, 10, idx)
-}
 
 func TestMap(t *testing.T) {
 	c := Map(context.Background(), func(source chan<- interface{}) {
 		for i := 0; i < 10; i++ {
 			source <- i
 		}
-	}, func(item interface{}, writer Writer) {
+	}, func(item interface{}, writer xbarrier.Writer) {
 		i := item.(int)
 		for j := 0; j < i; j++ {
 			writer.Write(j)
@@ -95,7 +70,7 @@ func TestMapStream(t *testing.T) {
 				}
 			}
 		},
-		func(item interface{}, writer Writer) {
+		func(item interface{}, writer xbarrier.Writer) {
 			i := item.(int)
 			//for j := 0; j < i; j++ {
 			//	writer.Write(j)
