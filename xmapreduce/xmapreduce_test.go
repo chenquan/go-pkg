@@ -71,6 +71,7 @@ func TestMapStream(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				source <- i
 				if i == 3 {
+					time.Sleep(time.Second)
 					cancelFunc()
 				}
 			}
