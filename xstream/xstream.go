@@ -16,7 +16,7 @@
  *
  */
 
-package stream
+package xstream
 
 import (
 	"errors"
@@ -313,10 +313,9 @@ func (s *Stream) ForeachOrdered(f ForEachFunc) {
 		items = append(items, item)
 	}
 	n := len(items)
-	for i := 0; i < n; i++ {
-		f(items[n-i-1])
+	for i := n - 1; i >= 0; i-- {
+		f(items[i])
 	}
-
 }
 
 // Concat Returns a Stream that concat others streams
