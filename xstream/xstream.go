@@ -526,3 +526,25 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 
 	return Range(source)
 }
+
+// Copy returns two identical Stream.
+func (s *Stream) Copy() (*Stream, *Stream) {
+	data := make([]interface{}, 0, 16)
+	for v := range s.source {
+		data = append(data, v)
+	}
+
+	c1 := make(chan interface{}, len(data))
+	c2 := make(chan interface{}, len(data))
+
+	go func() {
+		for v := range data {
+			c1 <- v
+			c2 <- v
+		}
+		close(c1)
+		close(c2)
+	}()
+
+	return Range(c1), Range(c2)
+}

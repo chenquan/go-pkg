@@ -375,3 +375,10 @@ func TestStream_FindFirst(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, nil, result)
 }
+
+func TestStream_Copy(t *testing.T) {
+	stream := Of(1, 2, 3)
+	s1, s2 := stream.Copy()
+	assert.Equal(t, 3, s1.Count())
+	assert.Equal(t, 3, s2.Count())
+}
