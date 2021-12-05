@@ -284,14 +284,20 @@ func (s *Stream) Limit(size int) *Stream {
 	source := make(chan interface{})
 
 	go func() {
-		i := 0
+		
 		for item := range s.source {
-			if i != size {
+			size--
+			if size >= 0 {
 				source <- item
 			}
-			i++
+			if size == 0 {
+				close(source)				b
+			}
 		}
-		close(source)
+		if n > 0 {
+			close(source)
+		}
+		
 	}()
 
 	return Range(source)
