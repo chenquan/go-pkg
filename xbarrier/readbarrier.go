@@ -37,12 +37,10 @@ func NewReadBarrier(ctx context.Context, readChannel <-chan interface{}) *ReadBa
 
 // Read data from the readChannel channel.
 func (r *ReadBarrier) Read() (val interface{}, success bool) {
-	for {
-		select {
-		case <-r.ctx.Done():
-			return nil, false
-		default:
-			return <-r.readChannel, true
-		}
+	select {
+	case <-r.ctx.Done():
+		return nil, false
+	default:
+		return <-r.readChannel, true
 	}
 }
