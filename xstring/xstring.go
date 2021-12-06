@@ -35,6 +35,7 @@ const (
 )
 
 var (
+	// ErrDecodeChar error occurred on char decoding
 	ErrDecodeChar = errors.New("error occurred on char decoding")
 )
 
@@ -534,9 +535,8 @@ func IndexOfDifference(strings ...string) int {
 			}
 			if firstDiff == -1 && shortestStrLen != longestStrLen {
 				return shortestStrLen
-			} else {
-				return firstDiff
 			}
+			return firstDiff
 		}
 
 	} else {
@@ -573,28 +573,27 @@ func Difference(a, b string) string {
 	i := IndexOfDifferenceWithTwoStr(a, b)
 	if i == -1 {
 		return empty
-	} else {
-		runes := []rune(b)
-		return string(runes[i:])
 	}
+	runes := []rune(b)
+	return string(runes[i:])
 }
 
+// CommonPrefix returns common prefix.
 func CommonPrefix(strings ...string) string {
 	if len(strings) != 0 {
 		smallestIndexOfDiff := IndexOfDifference(strings...)
 		if smallestIndexOfDiff == -1 {
 			return strings[0]
-		} else {
-			if smallestIndexOfDiff == 0 {
-				return empty
-			} else {
-				runes := []rune(strings[0])
-				return string(runes[0:smallestIndexOfDiff])
-			}
 		}
-	} else {
-		return empty
+		if smallestIndexOfDiff == 0 {
+			return empty
+		}
+		runes := []rune(strings[0])
+
+		return string(runes[0:smallestIndexOfDiff])
 	}
+
+	return empty
 }
 
 // Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.

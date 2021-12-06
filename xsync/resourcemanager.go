@@ -22,6 +22,7 @@ import (
 	"sync"
 )
 
+// ResourceManager is a resource manager.
 type ResourceManager struct {
 	rw           sync.RWMutex
 	resources    map[string]io.Closer

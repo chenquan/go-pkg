@@ -214,7 +214,9 @@ func TestReadString(t *testing.T) {
 
 	readString, err = ReadBytes(bytes.NewBuffer([]byte{0, 2, '1'}))
 	assert.Error(t, err)
+	assert.Nil(t, readString)
+
 	readString, err = ReadBytes(bytes.NewBuffer([]byte{0}))
 	assert.Error(t, err)
-
+	assert.Nil(t, readString)
 }
