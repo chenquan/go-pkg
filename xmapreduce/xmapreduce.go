@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/chenquan/go-pkg/xbarrier"
 	"github.com/chenquan/go-pkg/xstream"
+	"github.com/chenquan/go-pkg/xworker"
 	"sync"
 )
 
@@ -93,30 +94,23 @@ func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, coll
 		waitGroup.Wait()
 		close(collector)
 	}()
-
-	workerChan := make(chan struct{}, option.workerSize)
+	worker := xworker.NewWorker(option.workerSize)
 	writer := xbarrier.NewWriteBarrier(ctx, collector)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case workerChan <- struct{}{}:
-			item, ok := <-source
+		case item, ok := <-source:
 			if !ok {
-				<-workerChan
 				return
 			}
-
 			waitGroup.Add(1)
-			go func(value interface{}) {
-				defer func() {
-					waitGroup.Done()
-					<-workerChan
-				}()
+			worker.Run(ctx, func() {
+				defer waitGroup.Done()
+				mapFunc(item, writer)
 
-				mapFunc(value, writer)
-			}(item)
+			})
 		}
-
 	}
 }
