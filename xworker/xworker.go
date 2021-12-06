@@ -31,7 +31,7 @@ func NewWorker(size int) *Worker {
 	return &Worker{c: make(chan struct{}, size)}
 }
 
-// Run executes job.
+// Run executes function with ctx.
 func (w *Worker) Run(ctx context.Context, run func()) {
 	w.c <- struct{}{}
 	defer func() {
