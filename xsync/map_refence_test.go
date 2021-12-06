@@ -60,17 +60,16 @@ func (m *RWMutexMap) ComputeIfAbsent(key interface{}, computeFunc func(key inter
 func (m *RWMutexMap) ComputeIfPresent(key interface{}, computeFunc func(key interface{}, value interface{}) interface{}) (actual interface{}, exist bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	if value, ok := m.dirty[key]; !ok {
+	value, ok := m.dirty[key]
+	if !ok {
 		return nil, false
-	} else {
-
-		if m.dirty == nil {
-			m.dirty = make(map[interface{}]interface{})
-		}
-		m.dirty[key] = computeFunc(key, value)
-		return m.dirty[key], false
 	}
+	if m.dirty == nil {
+		m.dirty = make(map[interface{}]interface{})
+	}
+	m.dirty[key] = computeFunc(key, value)
+
+	return m.dirty[key], false
 
 }
 
