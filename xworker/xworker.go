@@ -21,7 +21,7 @@ import (
 	"github.com/chenquan/go-pkg/xtask"
 )
 
-// A Worker is used to run given number of workers to run jobs.
+// Worker is used to control the concurrency of goroutines.
 type Worker struct {
 	c chan struct{}
 }
