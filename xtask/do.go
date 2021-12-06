@@ -24,6 +24,7 @@ import (
 	"time"
 )
 
+// Do fn with ctx control.
 func Do(ctx context.Context, do func() error) (err error) {
 	doneChan := make(chan error, 1)
 	panicChan := make(chan interface{}, 1)
@@ -56,6 +57,7 @@ func Do(ctx context.Context, do func() error) (err error) {
 	return
 }
 
+// DoWithTimeout fn with timeout control.
 func DoWithTimeout(timeout time.Duration, do func() error) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
