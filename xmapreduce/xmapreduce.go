@@ -107,9 +107,9 @@ func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, coll
 			}
 			waitGroup.Add(1)
 			worker.Run(ctx, func() {
-				defer waitGroup.Done()
 				mapFunc(item, writer)
-
+			}, func() {
+				waitGroup.Done()
 			})
 		}
 	}

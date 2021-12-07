@@ -32,7 +32,7 @@ func NewWorker(size int) *Worker {
 }
 
 // Run executes function with ctx control.
-func (w *Worker) Run(ctx context.Context, run func()) {
+func (w *Worker) Run(ctx context.Context, run func(), deferFunc func()) {
 	w.c <- struct{}{}
 	defer func() {
 		<-w.c
@@ -40,5 +40,5 @@ func (w *Worker) Run(ctx context.Context, run func()) {
 	_ = xtask.Do(ctx, func() error {
 		run()
 		return nil
-	})
+	}, deferFunc)
 }
