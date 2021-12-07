@@ -66,20 +66,12 @@ func TestDoWithCancel(t *testing.T) {
 }
 
 func TestDoBackgroundOrTODO(t *testing.T) {
-	t.Run("", func(t *testing.T) {
-		assert.Panics(t, func() {
-			_ = Do(context.TODO(), func() error {
-				panic("")
-			}, func() {
+	assert.Panics(t, func() {
+		_ = Do(context.TODO(), func() error {
+			panic("")
+		}, func() {
 
-			})
 		})
-	})
-
-	_ = Do(context.TODO(), func() error {
-		panic("")
-	}, func() {
-
 	})
 
 }
