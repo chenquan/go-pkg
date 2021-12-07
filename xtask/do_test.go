@@ -31,6 +31,8 @@ func TestDoWithPanic(t *testing.T) {
 			panic("")
 
 			return nil
+		}, func() {
+
 		})
 	})
 }
@@ -39,13 +41,13 @@ func TestDoWithTimeout(t *testing.T) {
 	assert.Equal(t, context.DeadlineExceeded, DoWithTimeout(time.Millisecond, func() error {
 		time.Sleep(time.Millisecond * 50)
 		return nil
-	}))
+	}, func() {}))
 }
 
 func TestDoWithoutTimeout(t *testing.T) {
 	assert.Nil(t, DoWithTimeout(time.Second, func() error {
 		return nil
-	}))
+	}, func() {}))
 }
 
 func TestDoWithCancel(t *testing.T) {
@@ -57,6 +59,27 @@ func TestDoWithCancel(t *testing.T) {
 	err := Do(ctx, func() error {
 		time.Sleep(time.Minute)
 		return errors.New("err")
+	}, func() {
+
 	})
 	assert.Equal(t, context.Canceled, err)
+}
+
+func TestDoBackgroundOrTODO(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = Do(context.TODO(), func() error {
+			panic("")
+		}, func() {
+
+		})
+	})
+
+}
+
+func TestDoWithOutDefer(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = DoWithoutDefer(context.TODO(), func() error {
+			panic("")
+		})
+	})
 }

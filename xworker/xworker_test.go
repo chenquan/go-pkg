@@ -31,8 +31,10 @@ func TestWorker(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		group.Add(1)
 		worker.Run(context.Background(), func() {
-			group.Done()
+
 			k++
+		}, func() {
+			group.Done()
 		})
 		assert.EqualValues(t, i+1, k)
 	}
@@ -44,12 +46,34 @@ func TestWorker(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		group.Add(1)
 		worker.Run(context.Background(), func() {
-			group.Done()
+
 			atomic.AddUint32(&j, 1)
+		}, func() {
+			group.Done()
 		})
 
 	}
 	group.Wait()
 	assert.Equal(t, uint32(100), atomic.LoadUint32(&j))
+
+	worker = NewWorker(1)
+	group = sync.WaitGroup{}
+	j = uint32(0)
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	for i := 0; i < 100; i++ {
+		group.Add(1)
+		worker.Run(ctx, func() {
+
+			if atomic.AddUint32(&j, 1) == 50 {
+				cancelFunc()
+			}
+		}, func() {
+			group.Done()
+		})
+
+	}
+	group.Wait()
+	assert.Equal(t, uint32(50), atomic.LoadUint32(&j))
 
 }
