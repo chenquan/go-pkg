@@ -17,6 +17,7 @@
 package xsync
 
 import (
+	"github.com/chenquan/go-pkg/xerror"
 	"golang.org/x/sync/singleflight"
 	"io"
 	"sync"
@@ -39,7 +40,7 @@ func NewResourceManager() *ResourceManager {
 func (m *ResourceManager) Close() error {
 	m.rw.Lock()
 
-	var be BatchError
+	var be xerror.BatchError
 	for _, resource := range m.resources {
 		if err := resource.Close(); err != nil {
 			be.Add(err)
