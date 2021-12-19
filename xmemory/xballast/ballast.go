@@ -24,7 +24,7 @@ import (
 // Ballast is a Ballast object.
 type Ballast struct {
 	ballast     []byte
-	ballastLock sync.Mutex
+	ballastLock sync.RWMutex
 	maxSize     int
 }
 
@@ -40,11 +40,10 @@ func NewBallast(maxSize int) *Ballast {
 
 // GetSize get the size of ballast object
 func (b *Ballast) GetSize() int {
-	var sz int
-	b.ballastLock.Lock()
-	sz = len(b.ballast)
-	b.ballastLock.Unlock()
-	return sz
+	b.ballastLock.RLock()
+	size := len(b.ballast)
+	b.ballastLock.RUnlock()
+	return size
 }
 
 // SetSize set the size of ballast object
@@ -56,7 +55,12 @@ func (b *Ballast) SetSize(newSize int) error {
 		return fmt.Errorf("newSize cannot be bigger than %d but it has value %d", b.maxSize, newSize)
 	}
 	b.ballastLock.Lock()
-	b.ballast = make([]byte, newSize)
+	size := len(b.ballast)
+	if newSize > size {
+		b.ballast = append(b.ballast, make([]byte, newSize-size)...)
+	} else if newSize < size {
+		b.ballast = b.ballast[:newSize]
+	}
 	b.ballastLock.Unlock()
 	return nil
 }
