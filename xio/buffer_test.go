@@ -86,7 +86,7 @@ func TestGetBufferWriter(t *testing.T) {
 		_ = writer.WriteByte(1)
 		assert.Equal(t, 1, writer.Buffered())
 		assert.Equal(t, 4095, writer.Available())
-		PutBufWriter(writer)
+		PutBufferWriter(writer)
 	}
 
 }
@@ -98,7 +98,7 @@ func TestGetBufferWriterSize(t *testing.T) {
 		assert.Equal(t, 0, writer.Buffered())
 		_ = writer.WriteByte(1)
 		assert.Equal(t, 1, writer.Buffered())
-		PutBufWriter(writer)
+		PutBufferWriter(writer)
 	}
 }
 
@@ -110,7 +110,7 @@ func BenchmarkGetBufferWriter(b *testing.B) {
 		for pb.Next() {
 			writer := GetBufferWriter(buffer)
 			_ = writer.WriteByte(1)
-			PutBufWriter(writer)
+			PutBufferWriter(writer)
 		}
 	})
 }
@@ -123,7 +123,7 @@ func BenchmarkGetBufferWriterSize(b *testing.B) {
 		for pb.Next() {
 			writer := GetBufferWriterSize(buffer, 1000)
 			_ = writer.WriteByte(1)
-			PutBufWriter(writer)
+			PutBufferWriter(writer)
 		}
 	})
 }
