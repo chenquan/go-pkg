@@ -75,8 +75,8 @@ func GetBufferWriter(w io.Writer) *bufio.Writer {
 	return bufio.NewWriter(w)
 }
 
-// PutBufWriter recycles a bufio.Writer.
-func PutBufWriter(w *bufio.Writer) {
+// PutBufferWriter recycles a bufio.Writer.
+func PutBufferWriter(w *bufio.Writer) {
 	w.Reset(nil)
 	bufWriterPool.Put(w)
 }
