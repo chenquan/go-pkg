@@ -34,37 +34,30 @@ func Do(ctx context.Context, do func() error, deferFunc func()) (err error) {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
+	}
 
-		doneChan := make(chan error, 1)
-		panicChan := make(chan interface{}, 1)
+	doneChan := make(chan error, 1)
+	panicChan := make(chan interface{}, 1)
 
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					panicChan <- fmt.Sprintf("%+v\n\n%s", r, strings.TrimSpace(string(debug.Stack())))
-				}
-			}()
-
-			doneChan <- do()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panicChan <- fmt.Sprintf("%+v\n\n%s", r, strings.TrimSpace(string(debug.Stack())))
+			}
 		}()
 
-		select {
-		case p := <-panicChan:
-			panic(p)
-		case err = <-doneChan:
-			return
-		case <-ctx.Done():
+		doneChan <- do()
+	}()
 
-			select {
-			case p := <-panicChan:
-				panic(p)
-			default:
-			}
-
-			err = ctx.Err()
-		}
+	select {
+	case p := <-panicChan:
+		panic(p)
+	case err = <-doneChan:
 		return
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
+	return
 
 }
 
