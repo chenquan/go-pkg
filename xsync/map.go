@@ -414,6 +414,15 @@ func (m *Map) Delete(key interface{}) {
 	m.LoadAndDelete(key)
 }
 
+func (m *Map) Clear() {
+	m.mu.Lock()
+	m.read = atomic.Value{}
+	m.dirty = nil
+	m.misses = 0
+	m.mu.Unlock()
+
+}
+
 func (e *entry) delete() (value interface{}, ok bool) {
 	for {
 		p := atomic.LoadPointer(&e.p)
