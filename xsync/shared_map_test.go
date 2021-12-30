@@ -257,27 +257,3 @@ func TestFnv32(t *testing.T) {
 	}
 
 }
-
-//func TestKeysWhenRemoving(t *testing.T) {
-//	m := New()
-//
-//	// Insert 100 elements.
-//	Total := 100
-//	for i := 0; i < Total; i++ {
-//		m.Set(strconv.Itoa(i), Animal{strconv.Itoa(i)})
-//	}
-//
-//	// Remove 10 elements concurrently.
-//	Num := 10
-//	for i := 0; i < Num; i++ {
-//		go func(c *SharedMap, n int) {
-//			c.Remove(strconv.Itoa(n))
-//		}(m, i)
-//	}
-//	keys := m.Keys()
-//	for _, k := range keys {
-//		if k == "" {
-//			t.Error("Empty keys returned")
-//		}
-//	}
-//}
