@@ -298,14 +298,3 @@ func BenchmarkDeleteCollision(b *testing.B) {
 		},
 	})
 }
-
-//func BenchmarkMap_ComputeIfAbsent(b *testing.B) {
-//	benchMap(b, bench{
-//		setup: func(b *testing.B, m mapInterface) {
-//			m.LoadOrStore(0, 0)
-//		},
-//		perG: func(b *testing.B, pb *testing.PB, i int, m mapInterface) {
-//
-//		},
-//	})
-//}
