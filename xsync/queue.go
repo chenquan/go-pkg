@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	MultiRead      QueueMode = 1
-	MultiWrite     QueueMode = 2
-	MultiReadWrite           = MultiRead | MultiWrite
+	MultiRead QueueMode = 1 + iota
+	MultiWrite
+	MultiReadWrite = MultiRead | MultiWrite
 )
 
 type (
@@ -57,7 +57,7 @@ func WithQueueMode(mode QueueMode) QueueOption {
 func NewQueue(opts ...QueueOption) *Queue {
 	options := loadQueueOpts(opts...)
 
-	return &Queue{cond: sync.NewCond(&sync.Mutex{}), l: list.New(), cap: options.cap}
+	return &Queue{cond: sync.NewCond(&sync.Mutex{}), l: list.New(), cap: options.cap, mode: options.mode}
 }
 
 func loadQueueOpts(opts ...QueueOption) *QueueOptions {

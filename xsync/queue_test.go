@@ -92,30 +92,33 @@ func TestWithQueueMode(t *testing.T) {
 
 func TestQueue_Cap(t *testing.T) {
 
-	queue := NewQueue(WithQueueCap(2))
-	queue.Write(1)
-	queue.Write(1)
+	t.Run("pipeline", func(t *testing.T) {
+		queue := NewQueue(WithQueueCap(2))
+		queue.Write(1)
+		queue.Write(1)
 
-	n := 10
-	awake := make(chan struct{})
-	wg := sync.WaitGroup{}
-	for i := 0; i < n; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			queue.Write(1)
-			awake <- struct{}{}
-		}()
+		n := 10
+		awake := make(chan struct{})
+		wg := sync.WaitGroup{}
+		for i := 0; i < n; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				queue.Write(1)
+				awake <- struct{}{}
+			}()
 
-	}
-	for i := 0; i < n; i++ {
-		queue.Read()
-		<-awake
-		select {
-		case <-awake:
-			t.Fatal("goroutine not asleep")
-		default:
 		}
-	}
-	wg.Wait()
+		for i := 0; i < n; i++ {
+			queue.Read()
+			<-awake
+			select {
+			case <-awake:
+				t.Fatal("goroutine not asleep")
+			default:
+			}
+		}
+		wg.Wait()
+	})
+
 }
