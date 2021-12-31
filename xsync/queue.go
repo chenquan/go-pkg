@@ -24,7 +24,7 @@ import (
 const (
 	MultiRead QueueMode = 1 + iota
 	MultiWrite
-	MultiReadWrite = MultiRead | MultiWrite
+	MultiReadWrite
 )
 
 type (
@@ -35,21 +35,21 @@ type (
 		mode QueueMode
 	}
 	QueueMode    byte
-	QueueOptions struct {
+	queueOptions struct {
 		cap  int
 		mode QueueMode
 	}
-	QueueOption func(opt *QueueOptions)
+	QueueOption func(opt *queueOptions)
 )
 
 func WithQueueCap(cap int) QueueOption {
-	return func(opt *QueueOptions) {
+	return func(opt *queueOptions) {
 		opt.cap = cap
 	}
 }
 
 func WithQueueMode(mode QueueMode) QueueOption {
-	return func(opt *QueueOptions) {
+	return func(opt *queueOptions) {
 		opt.mode = mode
 	}
 }
@@ -60,8 +60,8 @@ func NewQueue(opts ...QueueOption) *Queue {
 	return &Queue{cond: sync.NewCond(&sync.Mutex{}), l: list.New(), cap: options.cap, mode: options.mode}
 }
 
-func loadQueueOpts(opts ...QueueOption) *QueueOptions {
-	opt := new(QueueOptions)
+func loadQueueOpts(opts ...QueueOption) *queueOptions {
+	opt := new(queueOptions)
 	for _, option := range opts {
 		option(opt)
 	}
