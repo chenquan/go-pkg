@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package xmemory
+package xsys
 
 import (
 	"github.com/chenquan/go-pkg/internal/hack"
