@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package xmemory
+package xsys
 
 import (
 	"github.com/stretchr/testify/assert"
