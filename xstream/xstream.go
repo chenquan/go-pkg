@@ -46,7 +46,17 @@ type (
 	ReduceFunc func(pipe <-chan interface{}) (interface{}, error)
 	// WalkFunc defines the method to walk through all the elements in a Stream.
 	WalkFunc func(item interface{}, pipe chan<- interface{})
+	// Collector represents a stream collector to collect items
+	Collector interface {
+		Input(c <-chan interface{})
+	}
+	CollectorFunc func(c <-chan interface{})
 )
+
+// Input implements Collector.
+func (cf CollectorFunc) Input(c <-chan interface{}) {
+	cf(c)
+}
 
 // Stream Represents a stream.
 type Stream struct {
@@ -146,13 +156,9 @@ func (s *Stream) Buffer(n int) *Stream {
 	return Range(source)
 }
 
-// Finish Done Stream.
-func (s *Stream) Finish(fs ...func(item interface{})) {
-	for item := range s.source {
-		for _, f := range fs {
-			f(item)
-		}
-	}
+// Done Stream.
+func (s *Stream) Done() {
+	drain(s.source)
 }
 
 // Chan Returns a channel of Stream.
@@ -308,10 +314,8 @@ func (s *Stream) Limit(size int) *Stream {
 
 // Foreach Traversals all elements.
 func (s *Stream) Foreach(f ForEachFunc) {
-	items := make([]interface{}, 0)
 	for item := range s.source {
 		f(item)
-		items = append(items, item)
 	}
 }
 
@@ -331,30 +335,31 @@ func (s *Stream) ForeachOrdered(f ForEachFunc) {
 func (s *Stream) Concat(others ...*Stream) *Stream {
 	source := make(chan interface{})
 	wg := sync.WaitGroup{}
-	for _, other := range others {
-		if s == other {
-			continue
+
+	go func() {
+		for _, other := range others {
+
+			wg.Add(1)
+			go func(s *Stream) {
+				for item := range s.source {
+					source <- item
+				}
+				wg.Done()
+			}(other)
+
 		}
+
 		wg.Add(1)
-		go func(s *Stream) {
+		go func() {
 			for item := range s.source {
 				source <- item
 			}
 			wg.Done()
-		}(other)
+		}()
 
-	}
-
-	wg.Add(1)
-	go func() {
-		for item := range s.source {
-			source <- item
-		}
-		wg.Done()
-	}()
-	go func() {
 		wg.Wait()
 		close(source)
+
 	}()
 
 	return Range(source)
@@ -449,14 +454,17 @@ func (s *Stream) Group(f KeyFunc) *Stream {
 
 // Merge Returns a Stream that merges all the items into a slice and generates a new stream.
 func (s *Stream) Merge() *Stream {
-	var items []interface{}
-	for item := range s.source {
-		items = append(items, item)
-	}
+	source := make(chan interface{})
 
-	source := make(chan interface{}, 1)
-	source <- items
-	close(source)
+	go func() {
+		var items []interface{}
+		for item := range s.source {
+			items = append(items, item)
+		}
+
+		source <- items
+		close(source)
+	}()
 
 	return Range(source)
 }
@@ -480,7 +488,7 @@ func (s *Stream) Reverse() *Stream {
 func (s *Stream) ParallelFinish(fn ParallelFunc, opts ...Option) {
 	s.Walk(func(item interface{}, pipe chan<- interface{}) {
 		fn(item)
-	}, opts...).Finish()
+	}, opts...).Done()
 }
 
 // AnyMach Returns whether any elements of this stream match the provided predicate.
@@ -490,6 +498,8 @@ func (s *Stream) AnyMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if f(item) {
 			isFind = true
+			go drain(s.source)
+
 			return
 		}
 	}
@@ -504,6 +514,8 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if !f(item) {
 			isFind = false
+			go drain(s.source)
+
 			return
 		}
 	}
@@ -513,10 +525,13 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 // FindFirst Returns an interface{} the first element of this stream, or a nil and a error if the stream is empty.
 // If the stream has no encounter order, then any element may be returned
 func (s *Stream) FindFirst() (result interface{}, err error) {
+
 	for item := range s.source {
 		result = item
+		go drain(s.source)
 		return
 	}
+
 	err = errors.New("no element")
 	return
 }
@@ -537,7 +552,7 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 }
 
 // Copy returns two identical Stream.
-func (s *Stream) Copy() (*Stream, *Stream) {
+func (s *Stream) Copy() *Stream {
 	data := make([]interface{}, 0, 16)
 	for v := range s.source {
 		data = append(data, v)
@@ -554,6 +569,16 @@ func (s *Stream) Copy() (*Stream, *Stream) {
 		close(c1)
 		close(c2)
 	}()
+	s.source = c1
+	return Range(c2)
+}
 
-	return Range(c1), Range(c2)
+func drain(channel <-chan interface{}) {
+	for range channel {
+	}
+}
+
+// Collection collects a Stream.
+func (s *Stream) Collection(collector Collector) {
+	collector.Input(s.source)
 }

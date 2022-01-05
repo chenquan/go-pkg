@@ -132,21 +132,6 @@ func TestStream_Buffer(t *testing.T) {
 
 }
 
-func TestStream_Finish(t *testing.T) {
-	var items1 []interface{}
-	var items2 []interface{}
-	Of(1, 2, 4).Finish(
-		func(item interface{}) {
-			items1 = append(items1, item)
-		},
-		func(item interface{}) {
-			items2 = append(items2, item)
-		},
-	)
-	assertEqual(t, items1, []interface{}{1, 2, 4})
-	assertEqual(t, items2, []interface{}{1, 2, 4})
-}
-
 func TestStream_Split(t *testing.T) {
 
 	stream := Of(1, 2, 444, 441, 1).Split(3)
@@ -184,9 +169,7 @@ func TestStream_Tail(t *testing.T) {
 }
 func TestTailZero(t *testing.T) {
 	assert.Panics(t, func() {
-		Of(1, 2, 3, 4).Tail(0).Finish(func(item interface{}) {
-
-		})
+		Of(1, 2, 3, 4).Tail(0).Done()
 	})
 }
 
@@ -365,7 +348,7 @@ func TestStream_Peek(t *testing.T) {
 	items := make([]interface{}, 0)
 	Of(1, 2, 3, 4).Peek(func(item interface{}) {
 		items = append(items, item)
-	}).Finish()
+	}).Done()
 	assertEqual(t, items, []interface{}{1, 2, 3, 4})
 }
 func TestStream_FindFirst(t *testing.T) {
@@ -378,7 +361,33 @@ func TestStream_FindFirst(t *testing.T) {
 
 func TestStream_Copy(t *testing.T) {
 	stream := Of(1, 2, 3)
-	s1, s2 := stream.Copy()
+	s1 := stream.Copy()
 	assert.Equal(t, 3, s1.Count())
-	assert.Equal(t, 3, s2.Count())
+	assert.Equal(t, 3, stream.Count())
+}
+
+func TestStream_Collection(t *testing.T) {
+
+	t.Run("GroupBy", func(t *testing.T) {
+		stream := Of(1, 2, 3)
+		group := GroupBy(func(item interface{}) interface{} {
+			return item.(int) % 2
+		})
+		stream.Collection(group)
+
+		assert.EqualValues(t, map[interface{}][]interface{}{
+			0: {2},
+			1: {1, 3},
+		}, group.Map())
+	})
+
+	t.Run("CollectorFunc", func(t *testing.T) {
+		ints := make([]int, 0, 3)
+		Of(1, 2, 3).Collection(CollectorFunc(func(c <-chan interface{}) {
+			for i := range c {
+				ints = append(ints, i.(int))
+			}
+		}))
+		assert.EqualValues(t, []int{1, 2, 3}, ints)
+	})
 }
