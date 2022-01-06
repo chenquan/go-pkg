@@ -181,6 +181,7 @@ func TestStream_Sort(t *testing.T) {
 func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(1), []interface{}{3})
 	equal(t, Of(1, 232, 3, 2, 3).Tail(2), []interface{}{2, 3})
+	equal(t, Of(1, 232, 3, 2, 3).Tail(8), []interface{}{1, 232, 3, 2, 3})
 }
 func TestTailZero(t *testing.T) {
 	assert.Panics(t, func() {
