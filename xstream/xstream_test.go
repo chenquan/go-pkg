@@ -194,9 +194,6 @@ func TestStream_Skip(t *testing.T) {
 	assertEqual(t, 3, Of(1, 2, 3, 4).Skip(1).Count())
 	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
 	equal(t, Of(1, 2, 3, 4).Skip(3), []interface{}{4})
-	assert.Panics(t, func() {
-		Of(1, 2, 3, 4).Skip(-1)
-	})
 	equal(t, Of(1, 2, 3).Skip(0), []interface{}{1, 2, 3})
 
 }
