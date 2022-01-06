@@ -228,6 +228,9 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 // Tail Returns a Stream that has n element at the end.
 func (s *Stream) Tail(n uint32) *Stream {
 
+	if n < 1 {
+		panic("n should be greater than 0")
+	}
 	source := make(chan interface{})
 
 	go func() {
