@@ -169,8 +169,11 @@ func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(8), []interface{}{1, 232, 3, 2, 3})
 }
 func TestTailZero(t *testing.T) {
+	Of(1, 2, 3, 4).Tail(0).Done()
+
 	assert.Panics(t, func() {
-		Of(1, 2, 3, 4).Tail(0).Done()
+		Of(1, 2, 3, 4).Tail(-1).Done()
+
 	})
 }
 
@@ -179,6 +182,9 @@ func TestStream_Skip(t *testing.T) {
 	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
 	equal(t, Of(1, 2, 3, 4).Skip(3), []interface{}{4})
 	equal(t, Of(1, 2, 3).Skip(0), []interface{}{1, 2, 3})
+	assert.Panics(t, func() {
+		Of(1, 2, 3).Skip(-1)
+	})
 
 }
 func TestStream_Limit(t *testing.T) {
@@ -387,5 +393,19 @@ func TestStream_Collection(t *testing.T) {
 			}
 		}))
 		assert.EqualValues(t, []int{1, 2, 3}, ints)
+	})
+}
+
+func TestStream_FindLast(t *testing.T) {
+	t.Run("has value", func(t *testing.T) {
+		last, err := Of(1, 2, 3).FindLast()
+		assert.NoError(t, err)
+		assert.EqualValues(t, 3, last)
+	})
+
+	t.Run("hasn't value", func(t *testing.T) {
+		last, err := Of().FindLast()
+		assert.Error(t, err)
+		assert.EqualValues(t, nil, last)
 	})
 }
