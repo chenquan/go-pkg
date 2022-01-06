@@ -166,6 +166,7 @@ func TestStream_Sort(t *testing.T) {
 func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(1), []interface{}{3})
 	equal(t, Of(1, 232, 3, 2, 3).Tail(2), []interface{}{2, 3})
+	equal(t, Of(1, 232, 3, 2, 3).Tail(8), []interface{}{1, 232, 3, 2, 3})
 }
 func TestTailZero(t *testing.T) {
 	assert.Panics(t, func() {
@@ -177,9 +178,6 @@ func TestStream_Skip(t *testing.T) {
 	assertEqual(t, 3, Of(1, 2, 3, 4).Skip(1).Count())
 	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
 	equal(t, Of(1, 2, 3, 4).Skip(3), []interface{}{4})
-	assert.Panics(t, func() {
-		Of(1, 2, 3, 4).Skip(-1)
-	})
 	equal(t, Of(1, 2, 3).Skip(0), []interface{}{1, 2, 3})
 
 }

@@ -20,7 +20,6 @@ package xstream
 
 import (
 	"errors"
-	"github.com/chenquan/go-pkg/xring"
 	"sort"
 	"sync"
 )
@@ -233,7 +232,8 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 }
 
 // Tail Returns a Stream that has n element at the end.
-func (s *Stream) Tail(n int64) *Stream {
+func (s *Stream) Tail(n uint32) *Stream {
+
 	if n < 1 {
 		panic("n should be greater than 0")
 	}
@@ -242,11 +242,11 @@ func (s *Stream) Tail(n int64) *Stream {
 	go func() {
 		defer close(source)
 
-		ring := xring.NewRing(int(n))
+		ring := newRing(uint(n))
 		for item := range s.source {
-			ring.Add(item)
+			ring.add(item)
 		}
-		for _, item := range ring.Take() {
+		for _, item := range ring.take() {
 			source <- item
 		}
 	}()
@@ -255,19 +255,17 @@ func (s *Stream) Tail(n int64) *Stream {
 }
 
 // Skip Returns a Stream that skips size elements.
-func (s *Stream) Skip(size int) *Stream {
+func (s *Stream) Skip(size uint32) *Stream {
 	if size == 0 {
 		return s
 	}
-	if size < 0 {
-		panic("size must be greater than -1")
-	}
+
 	source := make(chan interface{})
 
 	go func() {
 		defer close(source)
 
-		i := 0
+		i := uint32(0)
 		for item := range s.source {
 			if i >= size {
 				source <- item

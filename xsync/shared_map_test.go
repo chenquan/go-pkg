@@ -173,7 +173,7 @@ func TestConcurrent(t *testing.T) {
 	// Using go routines insert 1000 ints into our map.
 	go func() {
 		for i := 0; i < iterations/2; i++ {
-			// Add item to map.
+			// add item to map.
 			m.Store(strconv.Itoa(i), i)
 
 			// Retrieve item from map.
@@ -186,7 +186,7 @@ func TestConcurrent(t *testing.T) {
 
 	go func() {
 		for i := iterations / 2; i < iterations; i++ {
-			// Add item to map.
+			// add item to map.
 			m.Store(strconv.Itoa(i), i)
 
 			// Retrieve item from map.
