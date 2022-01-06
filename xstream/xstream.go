@@ -280,6 +280,7 @@ func (s *Stream) Skip(size int) *Stream {
 // Limit Returns a Stream that contains size elements.
 func (s *Stream) Limit(size int) *Stream {
 	if size == 0 {
+		go drain(s.source)
 		return Empty()
 	}
 	if size < 0 {
@@ -304,8 +305,6 @@ func (s *Stream) Limit(size int) *Stream {
 		if size > 0 {
 			close(source)
 		}
-
-		drain(s.source)
 	}()
 
 	return Range(source)
