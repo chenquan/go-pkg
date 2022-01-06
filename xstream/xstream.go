@@ -195,16 +195,16 @@ func (s *Stream) SplitSteam(n int) *Stream {
 	}
 	source := make(chan interface{})
 
-	var chunkSource = make(chan interface{}, n)
 	go func() {
 
+		var chunkSource = make(chan interface{}, n)
 		for item := range s.source {
 			chunkSource <- item
 			if len(chunkSource) == n {
 
 				source <- Range(chunkSource)
 				close(chunkSource)
-				chunkSource = nil
+
 				chunkSource = make(chan interface{}, n)
 			}
 		}
@@ -232,7 +232,7 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 }
 
 // Tail Returns a Stream that has n element at the end.
-func (s *Stream) Tail(n uint32) *Stream {
+func (s *Stream) Tail(n int) *Stream {
 
 	if n < 1 {
 		panic("n should be greater than 0")
@@ -242,11 +242,11 @@ func (s *Stream) Tail(n uint32) *Stream {
 	go func() {
 		defer close(source)
 
-		ring := newRing(uint(n))
+		r := newRing(uint(n))
 		for item := range s.source {
-			ring.add(item)
+			r.add(item)
 		}
-		for _, item := range ring.take() {
+		for _, item := range r.take() {
 			source <- item
 		}
 	}()
@@ -255,7 +255,7 @@ func (s *Stream) Tail(n uint32) *Stream {
 }
 
 // Skip Returns a Stream that skips size elements.
-func (s *Stream) Skip(size uint32) *Stream {
+func (s *Stream) Skip(size int) *Stream {
 	if size == 0 {
 		return s
 	}
@@ -265,7 +265,7 @@ func (s *Stream) Skip(size uint32) *Stream {
 	go func() {
 		defer close(source)
 
-		i := uint32(0)
+		i := 0
 		for item := range s.source {
 			if i >= size {
 				source <- item
@@ -305,6 +305,7 @@ func (s *Stream) Limit(size int) *Stream {
 			close(source)
 		}
 
+		drain(s.source)
 	}()
 
 	return Range(source)
@@ -526,7 +527,9 @@ func (s *Stream) FindFirst() (result interface{}, err error) {
 
 	for item := range s.source {
 		result = item
+
 		go drain(s.source)
+
 		return
 	}
 
