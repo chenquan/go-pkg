@@ -182,6 +182,9 @@ func TestStream_Skip(t *testing.T) {
 	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
 	equal(t, Of(1, 2, 3, 4).Skip(3), []interface{}{4})
 	equal(t, Of(1, 2, 3).Skip(0), []interface{}{1, 2, 3})
+	assert.Panics(t, func() {
+		Of(1, 2, 3).Skip(-1)
+	})
 
 }
 func TestStream_Limit(t *testing.T) {
