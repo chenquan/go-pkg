@@ -395,3 +395,17 @@ func TestStream_Collection(t *testing.T) {
 		assert.EqualValues(t, []int{1, 2, 3}, ints)
 	})
 }
+
+func TestStream_FindLast(t *testing.T) {
+	t.Run("has value", func(t *testing.T) {
+		last, err := Of(1, 2, 3).FindLast()
+		assert.NoError(t, err)
+		assert.EqualValues(t, 3, last)
+	})
+
+	t.Run("hasn't value", func(t *testing.T) {
+		last, err := Of().FindLast()
+		assert.Error(t, err)
+		assert.EqualValues(t, nil, last)
+	})
+}

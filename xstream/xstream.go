@@ -85,7 +85,12 @@ func Range(source <-chan interface{}) *Stream {
 
 // Of Returns a Stream based any element
 func Of(items ...interface{}) *Stream {
-	source := make(chan interface{}, len(items))
+	n := len(items)
+	if n == 0 {
+		return Empty()
+	}
+
+	source := make(chan interface{}, n)
 	go func() {
 		for _, item := range items {
 			source <- item
