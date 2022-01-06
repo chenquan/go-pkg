@@ -22,14 +22,8 @@ type Ring struct {
 }
 
 // newRing returns a Ring object with the given size n.
-func newRing(n int) *Ring {
-	if n < 1 {
-		panic("n should be greater than 0")
-	}
-
-	return &Ring{
-		elements: make([]interface{}, n),
-	}
+func newRing(n uint) *Ring {
+	return &Ring{elements: make([]interface{}, n)}
 }
 
 // add adds v into r.
