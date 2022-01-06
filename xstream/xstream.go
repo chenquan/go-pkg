@@ -20,7 +20,6 @@ package xstream
 
 import (
 	"errors"
-	"github.com/chenquan/go-pkg/xring"
 	"sort"
 	"sync"
 )
@@ -236,11 +235,11 @@ func (s *Stream) Tail(n int64) *Stream {
 	go func() {
 		defer close(source)
 
-		ring := xring.NewRing(int(n))
+		ring := newRing(int(n))
 		for item := range s.source {
-			ring.Add(item)
+			ring.add(item)
 		}
-		for _, item := range ring.Take() {
+		for _, item := range ring.take() {
 			source <- item
 		}
 	}()
