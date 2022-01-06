@@ -169,8 +169,11 @@ func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(8), []interface{}{1, 232, 3, 2, 3})
 }
 func TestTailZero(t *testing.T) {
+	Of(1, 2, 3, 4).Tail(0).Done()
+
 	assert.Panics(t, func() {
-		Of(1, 2, 3, 4).Tail(0).Done()
+		Of(1, 2, 3, 4).Tail(-1).Done()
+
 	})
 }
 

@@ -191,6 +191,7 @@ func (s *Stream) Split(n int) *Stream {
 // SplitSteam Returns a split Stream that contains multiple stream of chunk size n.
 func (s *Stream) SplitSteam(n int) *Stream {
 	if n < 1 {
+		go drain(s.source)
 		panic("n should be greater than 0")
 	}
 	source := make(chan interface{})
@@ -233,10 +234,14 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 
 // Tail Returns a Stream that has n element at the end.
 func (s *Stream) Tail(n int) *Stream {
-
-	if n < 1 {
+	if n <= 0 {
+		go drain(s.source)
+		if n == 0 {
+			return empty
+		}
 		panic("n should be greater than 0")
 	}
+
 	source := make(chan interface{})
 
 	go func() {
@@ -256,6 +261,11 @@ func (s *Stream) Tail(n int) *Stream {
 
 // Skip Returns a Stream that skips size elements.
 func (s *Stream) Skip(size int) *Stream {
+	if size < 0 {
+		go drain(s.source)
+		panic("size should be greater than 0")
+	}
+
 	if size == 0 {
 		return s
 	}
@@ -524,15 +534,27 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 // If the stream has no encounter order, then any element may be returned
 func (s *Stream) FindFirst() (result interface{}, err error) {
 
-	for item := range s.source {
-		result = item
-
+	for result = range s.source {
 		go drain(s.source)
-
 		return
 	}
 
 	err = errors.New("no element")
+	return
+}
+
+// FindLast Returns an interface{} the last element of this stream, or a nil and a error if the stream is empty.
+// If the stream has no encounter order, then any element may be returned
+func (s *Stream) FindLast() (result interface{}, err error) {
+	flag := true
+	for result = range s.source {
+		flag = false
+	}
+
+	if flag {
+		err = errors.New("no element")
+	}
+
 	return
 }
 
@@ -558,19 +580,19 @@ func (s *Stream) Copy() *Stream {
 		data = append(data, v)
 	}
 
-	c1 := make(chan interface{}, len(data))
-	c2 := make(chan interface{}, len(data))
+	originChan := make(chan interface{}, len(data))
+	copyChan := make(chan interface{}, len(data))
 
 	go func() {
 		for v := range data {
-			c1 <- v
-			c2 <- v
+			originChan <- v
+			copyChan <- v
 		}
-		close(c1)
-		close(c2)
+		close(originChan)
+		close(copyChan)
 	}()
-	s.source = c1
-	return Range(c2)
+	s.source = originChan
+	return Range(copyChan)
 }
 
 func drain(channel <-chan interface{}) {
