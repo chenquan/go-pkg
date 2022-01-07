@@ -270,12 +270,7 @@ func TestStream_Group(t *testing.T) {
 		Of(1, 2, 3, 4).Group(func(item interface{}) interface{} {
 			return item.(int) % 2
 		}).Map(func(item interface{}) interface{} {
-			m := item.([]interface{})
-			var vs []interface{}
-			for _, v := range m {
-				vs = append(vs, v)
-			}
-			return m
+			return item.([]interface{})
 		}).FlatMap(func(item interface{}) interface{} {
 			return item
 		}).Sort(func(a, b interface{}) bool {
@@ -305,10 +300,16 @@ func TestStream_ParallelFinish(t *testing.T) {
 
 func TestStream_AnyMach(t *testing.T) {
 	assertEqual(t, false, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
-		return 4 == item.(int)
+		if v, ok := item.(int); ok {
+			return v == 4
+		}
+		return false
 	}))
 	assertEqual(t, true, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
-		return 2 == item.(int)
+		if v, ok := item.(int); ok {
+			return v == 2
+		}
+		return false
 	}))
 }
 
@@ -358,6 +359,8 @@ func TestStream_Peek(t *testing.T) {
 func TestStream_FindFirst(t *testing.T) {
 	result, err := Of(1, 2, 3).FindFirst()
 	assert.NoError(t, err)
+	assert.EqualValues(t, 1, result)
+
 	result, err = Of().FindFirst()
 	assert.Error(t, err)
 	assert.Equal(t, nil, result)

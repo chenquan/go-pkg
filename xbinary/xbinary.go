@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	// InvalidLengthErr invalid length error.
-	InvalidLengthErr = errors.New("invalid length error")
+	// ErrInvalidLength invalid length error.
+	ErrInvalidLength = errors.New("invalid length error")
 )
 
 // WriteUint16 writes unit16.
@@ -50,7 +50,7 @@ func ReadUint16(r io.Reader) (uint16, error) {
 		return 0, err
 	}
 	if n < 2 {
-		return 0, InvalidLengthErr
+		return 0, ErrInvalidLength
 	}
 	return binary.BigEndian.Uint16(data), nil
 }
@@ -95,7 +95,7 @@ func ReadUint32(r io.Reader) (uint32, error) {
 		return 0, err
 	}
 	if n < 4 {
-		return 0, InvalidLengthErr
+		return 0, ErrInvalidLength
 	}
 	return binary.BigEndian.Uint32(data), nil
 }
