@@ -29,7 +29,7 @@ func BenchmarkStrconv(b *testing.B) {
 }
 
 func BenchmarkSingleInsertAbsent(b *testing.B) {
-	m := New()
+	m := NewSharedMap()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		m.Store(strconv.Itoa(i), "value")
@@ -45,7 +45,7 @@ func BenchmarkSingleInsertAbsentSyncMap(b *testing.B) {
 }
 
 func BenchmarkSingleInsertPresent(b *testing.B) {
-	m := New()
+	m := NewSharedMap()
 	m.Store("key", "value")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -63,7 +63,7 @@ func BenchmarkSingleInsertPresentSyncMap(b *testing.B) {
 }
 
 func benchmarkMultiInsertDifferent(b *testing.B, shardBlockSize int) {
-	m := New(WithShardBlockSize(shardBlockSize))
+	m := NewSharedMap(WithShardBlockSize(shardBlockSize))
 	finished := make(chan struct{}, b.N)
 	_, set := GetSet(m, finished)
 	b.ResetTimer()
@@ -103,7 +103,7 @@ func BenchmarkMultiInsertDifferent_256_Shard(b *testing.B) {
 }
 
 func BenchmarkMultiInsertSame(b *testing.B) {
-	m := New()
+	m := NewSharedMap()
 	finished := make(chan struct{}, b.N)
 	_, set := GetSet(m, finished)
 	m.Store("key", "value")
@@ -131,7 +131,7 @@ func BenchmarkMultiInsertSameSyncMap(b *testing.B) {
 }
 
 func BenchmarkMultiGetSame(b *testing.B) {
-	m := New(WithShardBlockSize(32))
+	m := NewSharedMap(WithShardBlockSize(32))
 	finished := make(chan struct{}, b.N)
 	get, _ := GetSet(m, finished)
 	m.Store("key", "value")
@@ -159,7 +159,7 @@ func BenchmarkMultiGetSameSyncMap(b *testing.B) {
 }
 
 func benchmarkMultiGetSetDifferent(b *testing.B, ShardBlockSize int) {
-	m := New(WithShardBlockSize(ShardBlockSize))
+	m := NewSharedMap(WithShardBlockSize(ShardBlockSize))
 	finished := make(chan struct{}, 2*b.N)
 	get, set := GetSet(m, finished)
 	m.Store("-1", "value")
@@ -202,7 +202,7 @@ func BenchmarkMultiGetSetDifferent_256_Shard(b *testing.B) {
 }
 
 func benchmarkMultiGetSetBlock(b *testing.B, shardBlockSize int) {
-	m := New(WithShardBlockSize(shardBlockSize))
+	m := NewSharedMap(WithShardBlockSize(shardBlockSize))
 	finished := make(chan struct{}, 2*b.N)
 	get, set := GetSet(m, finished)
 	for i := 0; i < b.N; i++ {

@@ -17,47 +17,28 @@
 package xsync
 
 type (
+	// SharedBlockMap is an alias that describes the block map.
 	SharedBlockMap = Map
 	SharedMap      struct {
 		b              []*SharedBlockMap
 		shardBlockSize uint32
 		n              uint32
 	}
-	SharedMapOptions struct {
+	sharedMapOptions struct {
 		shardBlockSize uint32
 	}
-	SharedMapOption func(*SharedMapOptions)
+	SharedMapOption func(*sharedMapOptions)
 )
 
-// ComputeIfAbsent  if the value corresponding to the key does not exist,
-// use the recalculated value obtained by remappingFunction and save it as the value of the key,
-// otherwise return the value.
-func (m *SharedMap) ComputeIfAbsent(key string, computeFunc func(key string) interface{}) (actual interface{}, loaded bool) {
-	shard := m.GetShard(key)
-	return shard.ComputeIfAbsent(key, func(key interface{}) interface{} {
-		return computeFunc(key.(string))
-	})
-}
-
-// ComputeIfPresent if the value corresponding to the key does not exist,
-// the null is returned, and if it exists, the value recalculated by remappingFunction is returned.
-func (m *SharedMap) ComputeIfPresent(key string, computeFunc func(key string, value interface{}) interface{}) (actual interface{}, exist bool) {
-	shard := m.GetShard(key)
-	return shard.ComputeIfPresent(key, func(key, value interface{}) interface{} {
-		return computeFunc(key.(string), value)
-	})
-}
-
 func WithShardBlockSize(shardBlockSize int) SharedMapOption {
-	return func(sharedMapOptions *SharedMapOptions) {
+	return func(sharedMapOptions *sharedMapOptions) {
 		sharedMapOptions.shardBlockSize = uint32(shardBlockSize)
-
 	}
 }
 
-// New returns a SharedMap.
-func New(opts ...SharedMapOption) *SharedMap {
-	options := new(SharedMapOptions)
+// NewSharedMap returns a SharedMap.
+func NewSharedMap(opts ...SharedMapOption) *SharedMap {
+	options := new(sharedMapOptions)
 	options.shardBlockSize = 32
 	for _, opt := range opts {
 		opt(options)
@@ -76,6 +57,25 @@ func New(opts ...SharedMapOption) *SharedMap {
 		n:              blockSize - 1,
 		shardBlockSize: blockSize,
 	}
+}
+
+// ComputeIfAbsent  if the value corresponding to the key does not exist,
+// use the recalculated value obtained by remappingFunction and save it as the value of the key,
+// otherwise return the value.
+func (m *SharedMap) ComputeIfAbsent(key string, computeFunc func(key string) interface{}) (actual interface{}, loaded bool) {
+	shard := m.GetShard(key)
+	return shard.ComputeIfAbsent(key, func(key interface{}) interface{} {
+		return computeFunc(key.(string))
+	})
+}
+
+// ComputeIfPresent if the value corresponding to the key does not exist,
+// the null is returned, and if it exists, the value recalculated by remappingFunction is returned.
+func (m *SharedMap) ComputeIfPresent(key string, computeFunc func(key string, value interface{}) interface{}) (actual interface{}, exist bool) {
+	shard := m.GetShard(key)
+	return shard.ComputeIfPresent(key, func(key, value interface{}) interface{} {
+		return computeFunc(key.(string), value)
+	})
 }
 
 func getShardBlockSize(shardBlockSize uint32) uint32 {
