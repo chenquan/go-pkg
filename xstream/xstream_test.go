@@ -358,6 +358,8 @@ func TestStream_Peek(t *testing.T) {
 func TestStream_FindFirst(t *testing.T) {
 	result, err := Of(1, 2, 3).FindFirst()
 	assert.NoError(t, err)
+	assert.EqualValues(t, 1, result)
+
 	result, err = Of().FindFirst()
 	assert.Error(t, err)
 	assert.Equal(t, nil, result)
