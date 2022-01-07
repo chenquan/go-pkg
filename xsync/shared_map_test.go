@@ -17,6 +17,7 @@
 package xsync
 
 import (
+	"github.com/stretchr/testify/assert"
 	"hash/fnv"
 	"sort"
 	"strconv"
@@ -28,16 +29,21 @@ type Animal struct {
 }
 
 func TestMapCreation(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 	if m == nil {
 		t.Error("map is null.")
 	}
 
 }
+func TestWithShardBlockSize(t *testing.T) {
+	sharedMap := NewSharedMap(WithShardBlockSize(10))
+	assert.EqualValues(t, uint32(16), sharedMap.shardBlockSize)
+	assert.EqualValues(t, uint32(16), sharedMap.n+1)
+}
 
 //
 func TestInsert(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 	elephant := Animal{"elephant"}
 	monkey := Animal{"monkey"}
 
@@ -55,7 +61,7 @@ func TestInsert(t *testing.T) {
 
 //
 func TestInsertAbsent(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 	elephant := Animal{"elephant"}
 	monkey := Animal{"monkey"}
 
@@ -66,7 +72,7 @@ func TestInsertAbsent(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 
 	// Get a missing element.
 	val, ok := m.Load("Money")
@@ -99,7 +105,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestHas(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 
 	// Get a missing element.
 	if m.Has("Money") == true {
@@ -115,7 +121,7 @@ func TestHas(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 
 	monkey := Animal{"monkey"}
 	m.Store("monkey", monkey)
@@ -146,7 +152,7 @@ func TestRemove(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 
 	// Insert 100 elements.
 	for i := 0; i < 100; i++ {
@@ -165,7 +171,7 @@ func TestClear(t *testing.T) {
 }
 
 func TestConcurrent(t *testing.T) {
-	m := New()
+	m := NewSharedMap()
 	ch := make(chan int)
 	const iterations = 1000
 	var a [iterations]int
@@ -232,7 +238,7 @@ func TestMInsert(t *testing.T) {
 		"elephant": Animal{"elephant"},
 		"monkey":   Animal{"monkey"},
 	}
-	m := New()
+	m := NewSharedMap()
 	m.MStore(animals)
 	count := 0
 	m.Range(func(key, value interface{}) bool {
@@ -256,4 +262,37 @@ func TestFnv32(t *testing.T) {
 		t.Errorf("Bundled fnv32 produced %d, expected result from hash/fnv32 is %d", fnv32(string(key)), hasher.Sum32())
 	}
 
+}
+
+func TestSharedMap_ComputeIfAbsent(t *testing.T) {
+	sharedMap := NewSharedMap()
+	actual, loaded := sharedMap.ComputeIfAbsent("1", func(key string) interface{} {
+		return "any"
+	})
+	assert.False(t, loaded)
+	assert.EqualValues(t, "any", actual)
+
+	actual, loaded = sharedMap.ComputeIfAbsent("1", func(key string) interface{} {
+		return "foo"
+	})
+	assert.True(t, loaded)
+	assert.EqualValues(t, "any", actual)
+
+}
+
+func TestSharedMap_ComputeIfPresent(t *testing.T) {
+	sharedMap := NewSharedMap()
+	sharedMap.Store("1", "any")
+	actual, loaded := sharedMap.ComputeIfPresent("1", func(key string, value interface{}) interface{} {
+		return "foo"
+	})
+
+	assert.True(t, loaded)
+	assert.EqualValues(t, "foo", actual)
+
+	actual, loaded = sharedMap.ComputeIfPresent("2", func(key string, value interface{}) interface{} {
+		return "any"
+	})
+	assert.False(t, loaded)
+	assert.EqualValues(t, nil, actual)
 }
