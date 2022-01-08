@@ -579,25 +579,32 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 }
 
 // Copy returns two identical Stream.
-func (s *Stream) Copy() *Stream {
-	data := make([]interface{}, 0, 16)
-	for v := range s.source {
-		data = append(data, v)
+func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream) {
+
+	streamMap = map[string]*Stream{}
+	chans := make([]chan interface{}, 0, len(streamParam))
+	for name, bufferSize := range streamParam {
+		c := make(chan interface{}, bufferSize)
+		stream := Range(c)
+		streamMap[name] = stream
+		chans = append(chans, c)
 	}
 
-	originChan := make(chan interface{}, len(data))
-	copyChan := make(chan interface{}, len(data))
+	sort.Slice(chans, func(i, j int) bool {
+		return cap(chans[i]) > cap(chans[j])
+	})
 
 	go func() {
-		for v := range data {
-			originChan <- v
-			copyChan <- v
+		for v := range s.source {
+			for _, c := range chans {
+				c <- v
+			}
 		}
-		close(originChan)
-		close(copyChan)
+		for _, c := range chans {
+			close(c)
+		}
 	}()
-	s.source = originChan
-	return Range(copyChan)
+	return
 }
 
 func drain(channel <-chan interface{}) {

@@ -367,10 +367,26 @@ func TestStream_FindFirst(t *testing.T) {
 }
 
 func TestStream_Copy(t *testing.T) {
-	stream := Of(1, 2, 3)
-	s1 := stream.Copy()
-	assert.Equal(t, 3, s1.Count())
-	assert.Equal(t, 3, stream.Count())
+	stream := Of(1, 2, 3, 4, 5)
+	streamMap := stream.Copy(map[string]int{
+		"a": 1,
+		"b": 2,
+	})
+
+	c := make(chan struct{})
+
+	go func() {
+		assert.Equal(t, 2, streamMap["a"].Filter(func(item interface{}) bool {
+			return item.(int)%2 == 0
+		}).Count())
+		<-c
+	}()
+
+	assert.Equal(t, 3, streamMap["b"].Filter(func(item interface{}) bool {
+		return item.(int)%2 != 0
+	}).Count())
+	c <- struct{}{}
+
 }
 
 func TestStream_Collection(t *testing.T) {
