@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/chenquan/go-pkg)](https://goreportcard.com/report/github.com/chenquan/go-pkg)
 [![Release](https://img.shields.io/github/v/release/chenquan/go-pkg.svg?style=flat-square)](https://github.com/chenquan/go-pkg)
 [![codecov](https://codecov.io/gh/chenquan/go-pkg/branch/master/graph/badge.svg?token=74phc5KVI7)](https://codecov.io/gh/chenquan/go-pkg)
-[![codecov](https://goproxy.cn/stats/github.com/chenquan/go-pkg/badges/download-count.svg)](https://github.com/chenquan/go-pkg)
+[![Download](https://goproxy.cn/stats/github.com/chenquan/go-pkg/badges/download-count.svg)](https://github.com/chenquan/go-pkg)
 [![GitHub](https://img.shields.io/github/license/chenquan/go-pkg)](https://github.com/chenquan/go-pkg/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chenquan/go-pkg)](https://github.com/chenquan/go-pkg/stargazers)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr-raw/chenquan/go-pkg)](https://github.com/chenquan/go-pkg/pulls)
