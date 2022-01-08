@@ -581,13 +581,12 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 // Copy returns multiple streams copied.
 // streamParam specifies the name and buffer size of the replicated stream.
 func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream) {
-
 	streamMap = map[string]*Stream{}
+
 	chans := make([]chan interface{}, 0, len(streamParam))
 	for name, bufferSize := range streamParam {
 		c := make(chan interface{}, bufferSize)
-		stream := Range(c)
-		streamMap[name] = stream
+		streamMap[name] = Range(c)
 		chans = append(chans, c)
 	}
 
@@ -605,6 +604,7 @@ func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream)
 			close(c)
 		}
 	}()
+
 	return
 }
 
