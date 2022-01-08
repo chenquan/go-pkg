@@ -578,7 +578,8 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 	return Range(source)
 }
 
-// Copy returns two identical Stream.
+// Copy returns multiple streams copied.
+// streamParam specifies the name and buffer size of the replicated stream.
 func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream) {
 
 	streamMap = map[string]*Stream{}
