@@ -20,7 +20,7 @@
 Install `go-pkg`
 
 ```shell
-go get github.com/chenquan/go-pkg
+go get -u github.com/chenquan/go-pkg
 ```
 
 ## License
