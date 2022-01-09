@@ -20,6 +20,7 @@ package xstream
 
 import (
 	"errors"
+	"github.com/panjf2000/ants/v2"
 	"sort"
 	"sync"
 )
@@ -91,12 +92,12 @@ func Of(items ...interface{}) *Stream {
 	}
 
 	source := make(chan interface{}, n)
-	go func() {
+	startGoroutine(func() {
 		for _, item := range items {
 			source <- item
 		}
 		close(source)
-	}()
+	})
 	return Range(source)
 }
 
@@ -108,12 +109,10 @@ func Concat(a *Stream, others ...*Stream) *Stream {
 // From Returns a Stream from generate function.
 func From(generate GenerateFunc) *Stream {
 	source := make(chan interface{})
-
-	go func() {
+	startGoroutine(func() {
 		defer close(source)
 		generate(source)
-	}()
-
+	})
 	return Range(source)
 }
 
@@ -121,7 +120,7 @@ func From(generate GenerateFunc) *Stream {
 func (s *Stream) Distinct(f KeyFunc) *Stream {
 	source := make(chan interface{})
 
-	go func() {
+	startGoroutine(func() {
 		defer close(source)
 
 		unique := make(map[interface{}]struct{})
@@ -132,7 +131,7 @@ func (s *Stream) Distinct(f KeyFunc) *Stream {
 				unique[k] = struct{}{}
 			}
 		}
-	}()
+	})
 	return Range(source)
 }
 
@@ -150,11 +149,14 @@ func (s *Stream) Buffer(n int) *Stream {
 		n = 0
 	}
 	source := make(chan interface{}, n)
-	go func() {
+	startGoroutine(func() {
 		for item := range s.source {
 			source <- item
 		}
 		close(source)
+	})
+	go func() {
+
 	}()
 
 	return Range(source)
@@ -176,7 +178,7 @@ func (s *Stream) Split(n int) *Stream {
 		panic("n should be greater than 0")
 	}
 	source := make(chan interface{})
-	go func() {
+	startGoroutine(func() {
 		var chunk []interface{}
 		for item := range s.source {
 			chunk = append(chunk, item)
@@ -189,7 +191,7 @@ func (s *Stream) Split(n int) *Stream {
 			source <- chunk
 		}
 		close(source)
-	}()
+	})
 	return Range(source)
 }
 
@@ -200,9 +202,7 @@ func (s *Stream) SplitSteam(n int) *Stream {
 		panic("n should be greater than 0")
 	}
 	source := make(chan interface{})
-
-	go func() {
-
+	startGoroutine(func() {
 		var chunkSource = make(chan interface{}, n)
 		for item := range s.source {
 			chunkSource <- item
@@ -219,7 +219,7 @@ func (s *Stream) SplitSteam(n int) *Stream {
 			close(chunkSource)
 		}
 		close(source)
-	}()
+	})
 
 	return Range(source)
 }
@@ -240,7 +240,9 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 // Tail Returns a Stream that has n element at the end.
 func (s *Stream) Tail(n int) *Stream {
 	if n <= 0 {
-		go drain(s.source)
+		go startGoroutine(func() {
+			drain(s.source)
+		})
 		if n == 0 {
 			return empty
 		}
@@ -248,8 +250,7 @@ func (s *Stream) Tail(n int) *Stream {
 	}
 
 	source := make(chan interface{})
-
-	go func() {
+	startGoroutine(func() {
 		defer close(source)
 
 		r := newRing(uint(n))
@@ -259,7 +260,7 @@ func (s *Stream) Tail(n int) *Stream {
 		for _, item := range r.take() {
 			source <- item
 		}
-	}()
+	})
 
 	return Range(source)
 }
@@ -267,7 +268,9 @@ func (s *Stream) Tail(n int) *Stream {
 // Skip Returns a Stream that skips size elements.
 func (s *Stream) Skip(size int) *Stream {
 	if size < 0 {
-		go drain(s.source)
+		go startGoroutine(func() {
+			drain(s.source)
+		})
 		panic("size should be greater than 0")
 	}
 
@@ -276,8 +279,7 @@ func (s *Stream) Skip(size int) *Stream {
 	}
 
 	source := make(chan interface{})
-
-	go func() {
+	startGoroutine(func() {
 		defer close(source)
 
 		i := 0
@@ -287,7 +289,7 @@ func (s *Stream) Skip(size int) *Stream {
 			}
 			i++
 		}
-	}()
+	})
 
 	return Range(source)
 }
@@ -295,15 +297,16 @@ func (s *Stream) Skip(size int) *Stream {
 // Limit Returns a Stream that contains size elements.
 func (s *Stream) Limit(size int) *Stream {
 	if size == 0 {
-		go drain(s.source)
+		go startGoroutine(func() {
+			drain(s.source)
+		})
 		return Empty()
 	}
 	if size < 0 {
 		panic("size must be greater than -1")
 	}
 	source := make(chan interface{})
-
-	go func() {
+	startGoroutine(func() {
 
 		for item := range s.source {
 			if size > 0 {
@@ -320,7 +323,7 @@ func (s *Stream) Limit(size int) *Stream {
 		if size > 0 {
 			close(source)
 		}
-	}()
+	})
 
 	return Range(source)
 }
@@ -348,32 +351,31 @@ func (s *Stream) ForeachOrdered(f ForEachFunc) {
 func (s *Stream) Concat(others ...*Stream) *Stream {
 	source := make(chan interface{})
 	wg := sync.WaitGroup{}
-
-	go func() {
+	startGoroutine(func() {
 		for _, other := range others {
-
+			other := other
 			wg.Add(1)
-			go func(s *Stream) {
-				for item := range s.source {
+			startGoroutine(func() {
+				for item := range other.source {
 					source <- item
 				}
 				wg.Done()
-			}(other)
+			})
 
 		}
 
 		wg.Add(1)
-		go func() {
+		startGoroutine(func() {
 			for item := range s.source {
 				source <- item
 			}
 			wg.Done()
-		}()
+		})
 
 		wg.Wait()
 		close(source)
 
-	}()
+	})
 
 	return Range(source)
 }
@@ -392,7 +394,7 @@ func (s *Stream) Filter(fn FilterFunc, opts ...Option) *Stream {
 func (s *Stream) Walk(f WalkFunc, opts ...Option) *Stream {
 	option := loadOptions(opts...)
 	pipe := make(chan interface{}, option.workSize)
-	go func() {
+	startGoroutine(func() {
 		var wg sync.WaitGroup
 		pool := make(chan struct{}, option.workSize)
 
@@ -417,7 +419,7 @@ func (s *Stream) Walk(f WalkFunc, opts ...Option) *Stream {
 		}
 		wg.Wait()
 		close(pipe)
-	}()
+	})
 
 	return Range(pipe)
 }
@@ -455,12 +457,12 @@ func (s *Stream) Group(f KeyFunc) *Stream {
 	}
 
 	source := make(chan interface{})
-	go func() {
+	startGoroutine(func() {
 		for _, group := range groups {
 			source <- group
 		}
 		close(source)
-	}()
+	})
 
 	return Range(source)
 }
@@ -468,8 +470,7 @@ func (s *Stream) Group(f KeyFunc) *Stream {
 // Merge Returns a Stream that merges all the items into a slice and generates a new stream.
 func (s *Stream) Merge() *Stream {
 	source := make(chan interface{})
-
-	go func() {
+	startGoroutine(func() {
 		var items []interface{}
 		for item := range s.source {
 			items = append(items, item)
@@ -477,7 +478,7 @@ func (s *Stream) Merge() *Stream {
 
 		source <- items
 		close(source)
-	}()
+	})
 
 	return Range(source)
 }
@@ -511,7 +512,9 @@ func (s *Stream) AnyMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if f(item) {
 			isFind = true
-			go drain(s.source)
+			startGoroutine(func() {
+				drain(s.source)
+			})
 
 			return
 		}
@@ -527,7 +530,9 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if !f(item) {
 			isFind = false
-			go drain(s.source)
+			startGoroutine(func() {
+				drain(s.source)
+			})
 
 			return
 		}
@@ -540,7 +545,9 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 func (s *Stream) FindFirst() (result interface{}, err error) {
 
 	for result = range s.source {
-		go drain(s.source)
+		startGoroutine(func() {
+			drain(s.source)
+		})
 		return
 	}
 
@@ -567,13 +574,13 @@ func (s *Stream) FindLast() (result interface{}, err error) {
 // additionally performing the provided action on each element as elements are consumed from the resulting stream.
 func (s *Stream) Peek(f ForEachFunc) *Stream {
 	source := make(chan interface{})
-	go func() {
+	startGoroutine(func() {
 		for item := range s.source {
 			source <- item
 			f(item)
 		}
 		close(source)
-	}()
+	})
 
 	return Range(source)
 }
@@ -593,7 +600,7 @@ func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream)
 		return cap(channels[i]) > cap(channels[j])
 	})
 
-	go func() {
+	startGoroutine(func() {
 		for v := range s.source {
 			for _, c := range channels {
 				c <- v
@@ -602,7 +609,7 @@ func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream)
 		for _, c := range channels {
 			close(c)
 		}
-	}()
+	})
 
 	return
 }
@@ -615,4 +622,8 @@ func drain(channel <-chan interface{}) {
 // Collection collects a Stream.
 func (s *Stream) Collection(collector Collector) {
 	collector.Input(s.source)
+}
+
+func startGoroutine(f func()) {
+	_ = ants.Submit(f)
 }
