@@ -25,6 +25,18 @@ import (
 	"sync"
 )
 
+// empty an empty Stream.
+var (
+	empty   *Stream
+	pool, _ = ants.NewPool(-1)
+)
+
+func init() {
+	source := make(chan interface{})
+	close(source)
+	empty = &Stream{source: source}
+}
+
 type (
 	// FilterFunc defines the method to filter a Stream.
 	FilterFunc func(item interface{}) bool
@@ -53,24 +65,23 @@ type (
 	CollectorFunc func(c <-chan interface{})
 )
 
-// Input implements Collector.
-func (cf CollectorFunc) Input(c <-chan interface{}) {
-	cf(c)
-}
-
 // Stream Represents a stream.
 type Stream struct {
 	source <-chan interface{}
 }
 
-// empty an empty Stream.
-var empty *Stream
-
-func init() {
-	source := make(chan interface{})
-	close(source)
-	empty = &Stream{source}
+// Input implements Collector.
+func (cf CollectorFunc) Input(c <-chan interface{}) {
+	cf(c)
 }
+
+// -------------
+
+func startGoroutine(f func()) {
+	_ = pool.Submit(f)
+}
+
+// -------------
 
 // Empty Returns an empty stream.
 func Empty() *Stream {
@@ -621,8 +632,4 @@ func drain(channel <-chan interface{}) {
 // Collection collects a Stream.
 func (s *Stream) Collection(collector Collector) {
 	collector.Input(s.source)
-}
-
-func startGoroutine(f func()) {
-	_ = ants.Submit(f)
 }
