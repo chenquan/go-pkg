@@ -582,25 +582,24 @@ func (s *Stream) Peek(f ForEachFunc) *Stream {
 // streamParam specifies the name and buffer size of the replicated stream.
 func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream) {
 	streamMap = map[string]*Stream{}
-
-	chans := make([]chan interface{}, 0, len(streamParam))
+	channels := make([]chan interface{}, 0, len(streamParam))
 	for name, bufferSize := range streamParam {
 		c := make(chan interface{}, bufferSize)
 		streamMap[name] = Range(c)
-		chans = append(chans, c)
+		channels = append(channels, c)
 	}
 
-	sort.Slice(chans, func(i, j int) bool {
-		return cap(chans[i]) > cap(chans[j])
+	sort.Slice(channels, func(i, j int) bool {
+		return cap(channels[i]) > cap(channels[j])
 	})
 
 	go func() {
 		for v := range s.source {
-			for _, c := range chans {
+			for _, c := range channels {
 				c <- v
 			}
 		}
-		for _, c := range chans {
+		for _, c := range channels {
 			close(c)
 		}
 	}()
