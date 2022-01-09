@@ -624,5 +624,6 @@ func (s *Stream) Collection(collector Collector) {
 }
 
 func startGoroutine(f func()) {
-	_ = ants.Submit(f)
+	pool, _ := ants.NewPool(-1)
+	_ = pool.Submit(f)
 }
