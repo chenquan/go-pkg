@@ -155,9 +155,6 @@ func (s *Stream) Buffer(n int) *Stream {
 		}
 		close(source)
 	})
-	go func() {
-
-	}()
 
 	return Range(source)
 }
@@ -198,7 +195,9 @@ func (s *Stream) Split(n int) *Stream {
 // SplitSteam Returns a split Stream that contains multiple stream of chunk size n.
 func (s *Stream) SplitSteam(n int) *Stream {
 	if n < 1 {
-		go drain(s.source)
+		startGoroutine(func() {
+			drain(s.source)
+		})
 		panic("n should be greater than 0")
 	}
 	source := make(chan interface{})
@@ -240,7 +239,7 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 // Tail Returns a Stream that has n element at the end.
 func (s *Stream) Tail(n int) *Stream {
 	if n <= 0 {
-		go startGoroutine(func() {
+		startGoroutine(func() {
 			drain(s.source)
 		})
 		if n == 0 {
@@ -268,7 +267,7 @@ func (s *Stream) Tail(n int) *Stream {
 // Skip Returns a Stream that skips size elements.
 func (s *Stream) Skip(size int) *Stream {
 	if size < 0 {
-		go startGoroutine(func() {
+		startGoroutine(func() {
 			drain(s.source)
 		})
 		panic("size should be greater than 0")
@@ -297,7 +296,7 @@ func (s *Stream) Skip(size int) *Stream {
 // Limit Returns a Stream that contains size elements.
 func (s *Stream) Limit(size int) *Stream {
 	if size == 0 {
-		go startGoroutine(func() {
+		startGoroutine(func() {
 			drain(s.source)
 		})
 		return Empty()
@@ -408,14 +407,14 @@ func (s *Stream) Walk(f WalkFunc, opts ...Option) *Stream {
 
 			wg.Add(1)
 			// better to safely run caller defined method
-			go func() {
+			startGoroutine(func() {
 				defer func() {
 					wg.Done()
 					<-pool
 				}()
 
 				f(item, pipe)
-			}()
+			})
 		}
 		wg.Wait()
 		close(pipe)
