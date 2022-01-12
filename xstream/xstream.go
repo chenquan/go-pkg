@@ -62,6 +62,7 @@ type (
 	Collector interface {
 		Input(c <-chan interface{})
 	}
+	// CollectorFunc represents a stream collector.
 	CollectorFunc func(c <-chan interface{})
 )
 
