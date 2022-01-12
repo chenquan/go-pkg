@@ -198,19 +198,6 @@ func TestStream_Split(t *testing.T) {
 	})
 }
 
-func TestStream_SplitSteam2(t *testing.T) {
-	pool.Reboot()
-	defer func() {
-		pool.Release()
-		goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/panjf2000/ants/v2.(*Pool).purgePeriodically"))
-	}()
-
-	streams := Of(1, 2, 444, 441, 1).SplitSteam(3)
-
-	equal(t, (<-streams.source).(*Stream), []interface{}{1, 2, 444})
-	equal(t, (<-streams.source).(*Stream), []interface{}{441, 1})
-}
-
 func TestStream_Sort(t *testing.T) {
 	pool.Reboot()
 	defer func() {
