@@ -42,6 +42,7 @@ func assertEqual(t *testing.T, except interface{}, data interface{}) {
 	}
 
 }
+
 func TestEmpty(t *testing.T) {
 	defer func() {
 		pool.Release()
@@ -226,6 +227,7 @@ func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(2), []interface{}{2, 3})
 	equal(t, Of(1, 232, 3, 2, 3).Tail(8), []interface{}{1, 232, 3, 2, 3})
 }
+
 func TestTailZero(t *testing.T) {
 	pool.Reboot()
 	defer func() {
@@ -257,6 +259,7 @@ func TestStream_Skip(t *testing.T) {
 	})
 
 }
+
 func TestStream_Limit(t *testing.T) {
 	pool.Reboot()
 	defer func() {
@@ -519,6 +522,7 @@ func TestStream_Peek(t *testing.T) {
 	}).Done()
 	assertEqual(t, items, []interface{}{1, 2, 3, 4})
 }
+
 func TestStream_FindFirst(t *testing.T) {
 	pool.Reboot()
 	defer func() {
