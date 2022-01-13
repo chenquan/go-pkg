@@ -19,17 +19,21 @@ package xsync
 type (
 	// SharedBlockMap is an alias that describes the block map.
 	SharedBlockMap = Map
-	SharedMap      struct {
+	// SharedMap represents a segment lock map.
+	SharedMap struct {
 		b              []*SharedBlockMap
 		shardBlockSize uint32
 		n              uint32
 	}
+	// sharedMapOptions configuration of SharedMap.
 	sharedMapOptions struct {
 		shardBlockSize uint32
 	}
+	// SharedMapOption configuration function of SharedMap.
 	SharedMapOption func(*sharedMapOptions)
 )
 
+// WithShardBlockSize returns a configuration that sets the size of the number of segments.
 func WithShardBlockSize(shardBlockSize int) SharedMapOption {
 	return func(sharedMapOptions *sharedMapOptions) {
 		sharedMapOptions.shardBlockSize = uint32(shardBlockSize)

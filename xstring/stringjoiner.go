@@ -31,7 +31,7 @@ type (
 		step   string
 		suffix string
 	}
-
+	// JoinerOption option function of Joiner.
 	JoinerOption func(*joinerOptions)
 )
 

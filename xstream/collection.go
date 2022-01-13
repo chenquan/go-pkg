@@ -16,6 +16,7 @@
 
 package xstream
 
+// Group represents a group collector.
 type Group struct {
 	s      <-chan interface{}
 	f      KeyFunc
