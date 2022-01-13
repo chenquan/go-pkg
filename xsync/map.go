@@ -414,6 +414,7 @@ func (m *Map) Delete(key interface{}) {
 	m.LoadAndDelete(key)
 }
 
+// Clear clears all elements.
 func (m *Map) Clear() {
 	m.mu.Lock()
 	m.read = atomic.Value{}

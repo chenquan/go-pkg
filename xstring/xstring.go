@@ -549,20 +549,18 @@ func IndexOfDifference(strings ...string) int {
 func IndexOfDifferenceWithTwoStr(a, b string) int {
 	if a == b {
 		return indexNotFound
-	} else {
-		aRunes := []rune(a)
-		bRunes := []rune(b)
-		aLen := len(aRunes)
-		bLen := len(bRunes)
-		i := 0
-		for ; i < aLen && i < bLen && aRunes[i] == bRunes[i]; i++ {
-		}
-		if i >= aLen && i >= bLen {
-			return indexNotFound
-		} else {
-			return i
-		}
 	}
+	aRunes := []rune(a)
+	bRunes := []rune(b)
+	aLen := len(aRunes)
+	bLen := len(bRunes)
+	i := 0
+	for ; i < aLen && i < bLen && aRunes[i] == bRunes[i]; i++ {
+	}
+	if i >= aLen && i >= bLen {
+		return indexNotFound
+	}
+	return i
 }
 
 // Difference Compares two Strings, and returns the portion where they differ.

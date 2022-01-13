@@ -171,9 +171,7 @@ func (m *DeepCopyMap) ComputeIfAbsent(key interface{}, computeFunc func(key inte
 
 func (m *DeepCopyMap) ComputeIfPresent(key interface{}, computeFunc func(key interface{}, value interface{}) interface{}) (actual interface{}, exist bool) {
 	clean, _ := m.clean.Load().(map[interface{}]interface{})
-	if value, ok := clean[key]; !ok {
-		return nil, false
-	} else {
+	if value, ok := clean[key]; ok {
 		m.mu.Lock()
 		// Reload clean in case it changed while we were waiting on m.mu.
 		clean, _ = m.clean.Load().(map[interface{}]interface{})
@@ -186,9 +184,8 @@ func (m *DeepCopyMap) ComputeIfPresent(key interface{}, computeFunc func(key int
 			m.clean.Store(dirty)
 		}
 		m.mu.Unlock()
-		return
-
 	}
+	return
 
 }
 
