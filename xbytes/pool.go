@@ -38,8 +38,7 @@ func Malloc(size, capacity int) []byte {
 
 	pool := getOrCreatePool(c)
 	s := pool.Get()
-	data := *((s).(*[]byte))
-	//return [:size]
+	data := *(s.(*[]byte))
 	return data[:size]
 }
 
