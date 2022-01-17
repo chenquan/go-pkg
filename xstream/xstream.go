@@ -25,10 +25,13 @@ import (
 	"sync"
 )
 
-// empty an empty Stream.
 var (
-	empty   *Stream
+	// empty an empty Stream.
+	empty *Stream
+	// pool a  ants pool.
 	pool, _ = ants.NewPool(-1)
+	// ErrNoElement no element error.
+	ErrNoElement = errors.New("no element")
 )
 
 func init() {
@@ -562,7 +565,7 @@ func (s *Stream) FindFirst() (result interface{}, err error) {
 		return
 	}
 
-	err = errors.New("no element")
+	err = ErrNoElement
 	return
 }
 
@@ -575,7 +578,7 @@ func (s *Stream) FindLast() (result interface{}, err error) {
 	}
 
 	if flag {
-		err = errors.New("no element")
+		err = ErrNoElement
 	}
 
 	return
@@ -625,12 +628,12 @@ func (s *Stream) Copy(streamParam map[string]int) (streamMap map[string]*Stream)
 	return
 }
 
-func drain(channel <-chan interface{}) {
-	for range channel {
-	}
-}
-
 // Collection collects a Stream.
 func (s *Stream) Collection(collector Collector) {
 	collector.Input(s.source)
+}
+
+func drain(channel <-chan interface{}) {
+	for range channel {
+	}
 }
