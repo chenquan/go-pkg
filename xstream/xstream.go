@@ -25,9 +25,10 @@ import (
 	"sync"
 )
 
-// empty an empty Stream.
 var (
-	empty   *Stream
+	// empty an empty Stream.
+	empty *Stream
+	// pool a  ants pool.
 	pool, _ = ants.NewPool(-1)
 	// ErrNoElement no element error.
 	ErrNoElement = errors.New("no element")
