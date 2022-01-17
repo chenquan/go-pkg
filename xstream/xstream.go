@@ -27,8 +27,9 @@ import (
 
 // empty an empty Stream.
 var (
-	empty        *Stream
-	pool, _      = ants.NewPool(-1)
+	empty   *Stream
+	pool, _ = ants.NewPool(-1)
+	// ErrNoElement no element error.
 	ErrNoElement = errors.New("no element")
 )
 
