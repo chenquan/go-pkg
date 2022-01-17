@@ -37,7 +37,10 @@ func Malloc(size, capacity int) []byte {
 	}
 
 	pool := getOrCreatePool(c)
-	return pool.Get().([]byte)[:size]
+	s := pool.Get()
+	data := *((s).(*[]byte))
+	//return [:size]
+	return data[:size]
 }
 
 // MallocSize returns a bytes of slice.
@@ -49,7 +52,8 @@ func getOrCreatePool(c int) *sync.Pool {
 	pool, _, _ := singleFlight.Do(strconv.Itoa(c), func() (interface{}, error) {
 		actual, _ := bytesPoolMap.ComputeIfAbsent(c, func(key interface{}) interface{} {
 			p := &sync.Pool{New: func() interface{} {
-				return make([]byte, 0, c)
+				s := make([]byte, 0, c)
+				return &s
 			}}
 			return p
 		})
@@ -62,5 +66,6 @@ func getOrCreatePool(c int) *sync.Pool {
 func Free(buf []byte) {
 	c := cap(buf)
 	pool := getOrCreatePool(c)
-	pool.Put(buf[:0])
+	s := buf[:0]
+	pool.Put(&s)
 }
