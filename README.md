@@ -12,7 +12,7 @@
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/chenquan/go-pkg?color=red)](https://github.com/chenquan/go-pkg/issues?q=is%3Aissue+is%3Aclosed)
 
 > 一个go工具包。
-> 该库还未发布正式版，不推荐在正式环境使用。
+> 该库还未发布正式版，不推荐在生产环境使用。
 
 **中文 | [English](README_EN.md)**
 
