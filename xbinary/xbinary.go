@@ -129,19 +129,15 @@ func WriteBytes(w io.Writer, s []byte) (err error) {
 
 // ReadBytes reads bytes.
 func ReadBytes(r io.Reader) (b []byte, err error) {
-	nBytes := xbytes.MallocSize(2)
-	defer xbytes.Free(nBytes)
-
-	_, err = io.ReadFull(r, nBytes)
+	length, err := ReadUint16(r)
 	if err != nil {
 		return nil, err
 	}
 
-	length := int(binary.BigEndian.Uint16(nBytes))
 	if length == 0 {
 		return nil, nil
 	}
-	payload := xbytes.MallocSize(length)
+	payload := xbytes.MallocSize(int(length))
 	_, err = io.ReadFull(r, payload)
 	if err != nil {
 		xbytes.Free(payload)

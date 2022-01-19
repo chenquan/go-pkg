@@ -26,12 +26,61 @@ import (
 
 func TestGetBufferReaderSize(t *testing.T) {
 	buffer := bytes.NewBuffer(make([]byte, 1000))
+	bufReaderPool = &sync.Pool{}
 	for i := 0; i < 1000; i++ {
 		reader := GetBufferReaderSize(buffer, buffer.Len())
 		PutBufferReader(reader)
 	}
 
 }
+
+func TestGetBufferReader(t *testing.T) {
+	b := make([]byte, 1000)
+	buffer := bytes.NewBuffer(b)
+	waitGroup := sync.WaitGroup{}
+	bufReaderPool = &sync.Pool{}
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(k int) {
+			defer waitGroup.Done()
+
+			reader := GetBufferReader(buffer)
+			assert.NotNil(t, reader)
+			PutBufferReader(reader)
+		}(i)
+	}
+
+	waitGroup.Wait()
+}
+
+func TestGetBufferWriter(t *testing.T) {
+	buffer := bytes.NewBuffer(make([]byte, 1000))
+	bufWriterPool = &sync.Pool{}
+	for i := 0; i < 1000; i++ {
+		writer := GetBufferWriter(buffer)
+		assert.Equal(t, 0, writer.Buffered())
+		assert.Equal(t, 4096, writer.Size())
+		_ = writer.WriteByte(1)
+		assert.Equal(t, 1, writer.Buffered())
+		assert.Equal(t, 4095, writer.Available())
+		PutBufferWriter(writer)
+	}
+
+}
+
+func TestGetBufferWriterSize(t *testing.T) {
+	buffer := bytes.NewBuffer(make([]byte, 1000))
+	bufWriterPool = &sync.Pool{}
+	for i := 0; i < 1000; i++ {
+		writer := GetBufferWriterSize(buffer, 1000)
+		assert.Equal(t, 0, writer.Buffered())
+		_ = writer.WriteByte(1)
+		assert.Equal(t, 1, writer.Buffered())
+		PutBufferWriter(writer)
+	}
+}
+
+// -----------------
 
 func BenchmarkGetBufferReaderSize(b *testing.B) {
 	buffer := bytes.NewBuffer(make([]byte, 1000))
@@ -75,31 +124,6 @@ func BenchmarkBufferReader(b *testing.B) {
 			_ = bufio.NewReader(buffer)
 		}
 	})
-}
-
-func TestGetBufferWriter(t *testing.T) {
-	buffer := bytes.NewBuffer(make([]byte, 1000))
-	for i := 0; i < 1000; i++ {
-		writer := GetBufferWriter(buffer)
-		assert.Equal(t, 0, writer.Buffered())
-		assert.Equal(t, 4096, writer.Size())
-		_ = writer.WriteByte(1)
-		assert.Equal(t, 1, writer.Buffered())
-		assert.Equal(t, 4095, writer.Available())
-		PutBufferWriter(writer)
-	}
-
-}
-
-func TestGetBufferWriterSize(t *testing.T) {
-	buffer := bytes.NewBuffer(make([]byte, 1000))
-	for i := 0; i < 1000; i++ {
-		writer := GetBufferWriterSize(buffer, 1000)
-		assert.Equal(t, 0, writer.Buffered())
-		_ = writer.WriteByte(1)
-		assert.Equal(t, 1, writer.Buffered())
-		PutBufferWriter(writer)
-	}
 }
 
 func BenchmarkGetBufferWriter(b *testing.B) {
@@ -150,22 +174,4 @@ func BenchmarkBufferWriter(b *testing.B) {
 			_ = writer.WriteByte(1)
 		}
 	})
-}
-
-func TestGetBufferReader(t *testing.T) {
-	b := make([]byte, 1000)
-	buffer := bytes.NewBuffer(b)
-	waitGroup := sync.WaitGroup{}
-	for i := 0; i < 100; i++ {
-		waitGroup.Add(1)
-		go func(k int) {
-			defer waitGroup.Done()
-
-			reader := GetBufferReader(buffer)
-			assert.NotNil(t, reader)
-			PutBufferReader(reader)
-		}(i)
-	}
-
-	waitGroup.Wait()
 }
