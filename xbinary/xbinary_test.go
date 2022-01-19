@@ -85,33 +85,17 @@ func TestWriteUint16(t *testing.T) {
 }
 
 func TestReadUint16(t *testing.T) {
-	type args struct {
-		r io.Reader
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    uint16
-		wantErr bool
-	}{
-		{
-			"correct", args{r: bytes.NewReader([]byte{0, 1})}, 1, false,
-		}, {
-			"error", args{r: bytes.NewReader([]byte{1})}, 0, true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ReadUint16(tt.args.r)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ReadUint16() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("ReadUint16() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	readUint16, err := ReadUint16(bytes.NewReader([]byte{0, 1}))
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, readUint16)
+
+	readUint16, err = ReadUint16(bytes.NewReader([]byte{1}))
+	assert.Error(t, err)
+	assert.EqualValues(t, 0, readUint16)
+
+	readUint16, err = ReadUint16(bytes.NewReader([]byte{}))
+	assert.Error(t, err)
+	assert.EqualValues(t, 0, readUint16)
 }
 
 func TestWriteBool(t *testing.T) {
@@ -154,37 +138,17 @@ func TestWriteBool(t *testing.T) {
 }
 
 func TestReadUint32(t *testing.T) {
-	type args struct {
-		r io.Reader
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    uint32
-		wantErr bool
-	}{
-		{
-			"correct",
-			args{r: bytes.NewReader([]byte{0, 0, 0, 1})},
-			1, false,
-		}, {
-			"error",
-			args{r: bytes.NewReader([]byte{0, 0, 1})},
-			0, true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ReadUint32(tt.args.r)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ReadUint32() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("ReadUint32() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	readUint32, err := ReadUint32(bytes.NewReader([]byte{0, 0, 0, 1}))
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, readUint32)
+
+	readUint32, err = ReadUint32(bytes.NewReader([]byte{0, 0, 1}))
+	assert.Error(t, err)
+	assert.EqualValues(t, 0, readUint32)
+
+	readUint32, err = ReadUint32(bytes.NewReader(nil))
+	assert.Error(t, err)
+	assert.EqualValues(t, 0, readUint32)
 }
 
 func TestWriteUint32(t *testing.T) {
@@ -211,6 +175,10 @@ func TestReadString(t *testing.T) {
 	readString, err := ReadBytes(bytes.NewBuffer([]byte{0, 1, '1'}))
 	assert.NoError(t, err)
 	assert.EqualValues(t, "1", readString)
+
+	readString, err = ReadBytes(bytes.NewBuffer([]byte{0, 0}))
+	assert.NoError(t, err)
+	assert.Len(t, readString, 0)
 
 	readString, err = ReadBytes(bytes.NewBuffer([]byte{0, 2, '1'}))
 	assert.Error(t, err)
