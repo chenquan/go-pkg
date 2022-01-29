@@ -31,8 +31,7 @@ func NewChan() *Chan {
 
 // Write writes a v.
 func (c *Chan) Write(v interface{}) (success bool) {
-	success = atomic.CompareAndSwapUint32(&c.wrote, 0, 1)
-	if success {
+	if success = atomic.CompareAndSwapUint32(&c.wrote, 0, 1); success {
 		c.channel <- v
 		close(c.channel)
 	}
