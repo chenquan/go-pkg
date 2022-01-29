@@ -20,6 +20,7 @@ import (
 	"sync/atomic"
 )
 
+// Value represents a value that can only be written too once.
 type Value struct {
 	v atomic.Value
 }
