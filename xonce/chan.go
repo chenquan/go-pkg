@@ -18,23 +18,28 @@ package xonce
 
 import "sync"
 
+// Chan represents a channel that can only be written too once.
 type Chan struct {
 	channel chan interface{}
 	sync.Once
 }
 
+// NewChan returns a Chan.
 func NewChan() *Chan {
 	return &Chan{channel: make(chan interface{}, 1)}
 }
 
+// Write writes a v.
 func (c *Chan) Write(v interface{}) (success bool) {
 	c.Do(func() {
 		c.channel <- v
 		success = true
+		close(c.channel)
 	})
 	return
 }
 
+// Chan returns a channel.
 func (c *Chan) Chan() chan interface{} {
 	return c.channel
 }
