@@ -16,7 +16,9 @@
 
 package xerror
 
-import "bytes"
+import (
+	"github.com/chenquan/go-pkg/xstring"
+)
 
 type (
 	// A BatchError is an error that can hold multiple errors.
@@ -53,14 +55,10 @@ func (be *BatchError) NotNil() bool {
 
 // Error returns a string that represents inside errors.
 func (ea errorArray) Error() string {
-	var buf bytes.Buffer
-
+	joiner := xstring.NewJoiner(xstring.WithJoinerStep("\n"))
 	for i := range ea {
-		if i > 0 {
-			buf.WriteByte('\n')
-		}
-		buf.WriteString(ea[i].Error())
+		_, _ = joiner.WriteString(ea[i].Error())
 	}
 
-	return buf.String()
+	return joiner.String()
 }
