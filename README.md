@@ -12,7 +12,6 @@
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/chenquan/go-pkg?color=red)](https://github.com/chenquan/go-pkg/issues?q=is%3Aissue+is%3Aclosed)
 
 > A go toolkit.
-> The library has not yet released the official version, and it is not recommended using it in a production environment.
 
 **[中文](README_CN.md) | English**
 
