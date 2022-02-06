@@ -70,7 +70,6 @@ func TestDoBackgroundOrTODO(t *testing.T) {
 		}, func() {
 		})
 	})
-
 }
 
 func TestDoCtxError(t *testing.T) {
@@ -98,7 +97,6 @@ func TestDoCtxError(t *testing.T) {
 
 		assert.ErrorIs(t, err, context.Canceled)
 	})
-
 }
 
 func TestDoWithOutDefer(t *testing.T) {
