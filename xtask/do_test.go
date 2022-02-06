@@ -73,7 +73,35 @@ func TestDoBackgroundOrTODO(t *testing.T) {
 	})
 
 }
+func TestDoCtxError(t *testing.T) {
+	t.Run("timeout", func(t *testing.T) {
+		ctx, cancelFunc := context.WithTimeout(context.Background(), time.Nanosecond)
+		time.Sleep(time.Millisecond)
+		defer cancelFunc()
 
+		err := Do(ctx, func() error {
+			return nil
+		}, func() {
+
+		})
+
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+	})
+
+	t.Run("cancel", func(t *testing.T) {
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		cancelFunc()
+
+		err := Do(ctx, func() error {
+			return nil
+		}, func() {
+
+		})
+
+		assert.ErrorIs(t, err, context.Canceled)
+	})
+
+}
 func TestDoWithOutDefer(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = DoWithoutDefer(context.TODO(), func() error {
