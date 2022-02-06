@@ -29,8 +29,6 @@ func TestDoWithPanic(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = DoWithTimeout(time.Second, func() (err error) {
 			panic("")
-
-			return nil
 		}, func() {
 
 		})
