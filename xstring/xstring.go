@@ -493,8 +493,7 @@ func Contains(s string, searchChar string) bool {
 
 // IsNumerical returns ture if a numerical.
 func IsNumerical(s string) bool {
-	expr := `^\d+.?\d*$`
-	reg, _ := regexp.Compile(expr)
+	reg, _ := regexp.Compile(`^\d+.?\d*$`)
 	return reg.MatchString(s)
 }
 
