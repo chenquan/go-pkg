@@ -30,7 +30,6 @@ func TestChan(t *testing.T) {
 	flag := int32(-1)
 	for i := 0; i < N; i++ {
 		go func(i int) {
-
 			if value.Write(i) {
 				atomic.StoreInt32(&flag, int32(i))
 			}

@@ -38,6 +38,7 @@ func (c *Chan) Write(v interface{}) (success bool) {
 		close(c.channel)
 		success = true
 	})
+
 	return
 }
 

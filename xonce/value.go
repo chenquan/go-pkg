@@ -35,6 +35,7 @@ func (val *Value) Write(v interface{}) (success bool) {
 		val.v = v
 		success = true
 	})
+
 	return
 }
 
