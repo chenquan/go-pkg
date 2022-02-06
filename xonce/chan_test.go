@@ -23,7 +23,6 @@ import (
 )
 
 func TestChan(t *testing.T) {
-
 	value := NewChan()
 	N := 1000
 	c := make(chan struct{})
