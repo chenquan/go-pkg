@@ -24,7 +24,7 @@ import (
 	"testing"
 )
 
-func TestMalloc(t *testing.T) {
+func TestMallocSize(t *testing.T) {
 	n := 100
 	waitGroup := sync.WaitGroup{}
 	for i := 0; i < n; i++ {
@@ -41,6 +41,13 @@ func TestMalloc(t *testing.T) {
 		}(i)
 	}
 	waitGroup.Wait()
+}
+
+func TestMalloc(t *testing.T) {
+	b := Malloc(10, 20)
+	assert.EqualValues(t, 10, len(b))
+	assert.EqualValues(t, 20, cap(b))
+	Free(b)
 }
 
 func BenchmarkMakeBytes(b *testing.B) {
