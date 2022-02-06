@@ -18,12 +18,27 @@ package xonce
 
 import (
 	"github.com/stretchr/testify/assert"
+	"sync/atomic"
 	"testing"
 )
 
 func TestOnce(t *testing.T) {
 	value := NewValue()
-	assert.EqualValues(t, true, value.Write(1))
-	assert.EqualValues(t, false, value.Write(2))
-	assert.EqualValues(t, 1, value.Value())
+	N := 1000
+	c := make(chan struct{})
+	flag := int32(-1)
+	for i := 0; i < N; i++ {
+		go func(i int) {
+
+			if value.Write(i) {
+				atomic.StoreInt32(&flag, int32(i))
+			}
+
+			c <- struct{}{}
+		}(i)
+	}
+	for i := 0; i < N; i++ {
+		<-c
+	}
+	assert.EqualValues(t, flag, value.Value())
 }

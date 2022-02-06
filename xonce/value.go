@@ -16,13 +16,12 @@
 
 package xonce
 
-import (
-	"sync/atomic"
-)
+import "sync"
 
 // Value represents a value that can only be written too once.
 type Value struct {
-	v atomic.Value
+	v    interface{}
+	once sync.Once
 }
 
 // NewValue returns a Value.
@@ -32,10 +31,14 @@ func NewValue() *Value {
 
 // Write writes a v.
 func (val *Value) Write(v interface{}) (success bool) {
-	return val.v.CompareAndSwap(nil, v)
+	val.once.Do(func() {
+		val.v = v
+		success = true
+	})
+	return
 }
 
 // Value return a v.
 func (val *Value) Value() interface{} {
-	return val.v.Load()
+	return val.v
 }

@@ -16,12 +16,14 @@
 
 package xonce
 
-import "sync/atomic"
+import (
+	"sync"
+)
 
 // Chan represents a channel that can only be written too once.
 type Chan struct {
 	channel chan interface{}
-	wrote   uint32
+	once    sync.Once
 }
 
 // NewChan returns a Chan.
@@ -31,11 +33,11 @@ func NewChan() *Chan {
 
 // Write writes a v.
 func (c *Chan) Write(v interface{}) (success bool) {
-	if success = atomic.CompareAndSwapUint32(&c.wrote, 0, 1); success {
+	c.once.Do(func() {
 		c.channel <- v
 		close(c.channel)
-	}
-
+		success = true
+	})
 	return
 }
 
