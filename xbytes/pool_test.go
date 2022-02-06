@@ -43,8 +43,8 @@ func TestMallocSize(t *testing.T) {
 	waitGroup.Wait()
 }
 
-func TestMalloc(t *testing.T){
-	b := Malloc(10,20)
+func TestMalloc(t *testing.T) {
+	b := Malloc(10, 20)
 	assert.EqualValues(t, 10, len(b))
 	assert.EqualValues(t, 20, cap(b))
 	Free(b)
