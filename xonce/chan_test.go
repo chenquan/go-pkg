@@ -18,12 +18,36 @@ package xonce
 
 import (
 	"github.com/stretchr/testify/assert"
+	"sync/atomic"
 	"testing"
 )
 
 func TestChan(t *testing.T) {
-	newChan := NewChan()
-	assert.EqualValues(t, true, newChan.Write(1))
-	assert.EqualValues(t, false, newChan.Write(2))
-	assert.EqualValues(t, 1, <-newChan.Chan())
+	value := NewChan()
+	N := 1000
+	c := make(chan struct{})
+	flag := int32(-1)
+	for i := 0; i < N; i++ {
+		go func(i int) {
+			if value.Write(i) {
+				atomic.StoreInt32(&flag, int32(i))
+			}
+
+			c <- struct{}{}
+		}(i)
+	}
+
+	for i := 0; i < N; i++ {
+		<-c
+	}
+
+	i := 0
+	for n := range value.Chan() {
+		if i != 0 {
+			t.Errorf("only written once.")
+		}
+		assert.EqualValues(t, flag, n)
+
+		i++
+	}
 }

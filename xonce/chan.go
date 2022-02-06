@@ -16,7 +16,9 @@
 
 package xonce
 
-import "sync/atomic"
+import (
+	"sync/atomic"
+)
 
 // Chan represents a channel that can only be written too once.
 type Chan struct {
