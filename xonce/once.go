@@ -18,5 +18,6 @@ package xonce
 
 // Once represents an interface that can only be written too once.
 type Once interface {
+	// Write writes a v.
 	Write(v interface{}) (success bool)
 }
