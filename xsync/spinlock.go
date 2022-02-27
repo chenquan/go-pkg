@@ -21,6 +21,8 @@ import (
 	"sync/atomic"
 )
 
+const maxBackoff = 16
+
 // Spinlock represents a spin lock.
 type Spinlock struct {
 	lock uint32
@@ -28,8 +30,15 @@ type Spinlock struct {
 
 // Lock locks the Spinlock.
 func (lock *Spinlock) Lock() {
+	backoff := 1
 	for !lock.TryLock() {
-		runtime.Gosched()
+		// Leverage the exponential backoff algorithm, see https://en.wikipedia.org/wiki/Exponential_backoff.
+		for i := 0; i < backoff; i++ {
+			runtime.Gosched()
+		}
+		if backoff < maxBackoff {
+			backoff <<= 1
+		}
 	}
 }
 
