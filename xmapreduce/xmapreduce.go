@@ -18,22 +18,23 @@ package xmapreduce
 
 import (
 	"context"
+	"sync"
+
 	"github.com/chenquan/go-pkg/xbarrier"
 	"github.com/chenquan/go-pkg/xstream"
 	"github.com/chenquan/go-pkg/xworker"
-	"sync"
 )
 
 type (
 	// GenerateFunc is used to let callers send elements into source.
-	GenerateFunc func(source chan<- interface{})
+	GenerateFunc[T any] func(source chan<- T)
 
 	// MapFunc is used to do element processing and write the output to writer.
-	MapFunc func(item interface{}, writer xbarrier.Writer)
+	MapFunc[T any] func(item T, writer xbarrier.Writer[T])
 
 	// ReducerFunc is used to reduce all the mapping output and write to writer,
 	// use cancel func to cancel the processing.
-	ReducerFunc func(pipe <-chan interface{}, writer xbarrier.Writer, cancel func(error))
+	ReducerFunc[T any] func(pipe <-chan interface{}, writer xbarrier.Writer[T], cancel func(error))
 
 	options struct {
 		workerSize int
@@ -61,23 +62,23 @@ func loadOption(opts ...Option) *options {
 }
 
 // Map maps all elements generated from given generate func, and returns an output channel.
-func Map(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts ...Option) <-chan interface{} {
+func Map[T any](ctx context.Context, generateFunc GenerateFunc[T], mapFunc MapFunc[T], opts ...Option) <-chan T {
 	option := loadOption(opts...)
-	source := buildSource(generateFunc)
+	source := buildSource[T](generateFunc)
 
-	collector := make(chan interface{}, option.workerSize)
-	go doMap(ctx, mapFunc, source, collector, option)
+	collector := make(chan T, option.workerSize)
+	go doMap[T](ctx, mapFunc, source, collector, option)
 
 	return collector
 }
 
 // MapStream maps all elements generated from given generate func, and returns a xstream.Stream.
-func MapStream(ctx context.Context, generateFunc GenerateFunc, mapFunc MapFunc, opts ...Option) *xstream.Stream {
-	return xstream.Range(Map(ctx, generateFunc, mapFunc, opts...))
+func MapStream[T any](ctx context.Context, generateFunc GenerateFunc[T], mapFunc MapFunc[T], opts ...Option) *xstream.Stream[T] {
+	return xstream.Range[T](Map[T](ctx, generateFunc, mapFunc, opts...))
 }
 
-func buildSource(generateFunc GenerateFunc) chan interface{} {
-	source := make(chan interface{})
+func buildSource[T any](generateFunc GenerateFunc[T]) chan T {
+	source := make(chan T)
 
 	go func() {
 		defer close(source)
@@ -87,7 +88,7 @@ func buildSource(generateFunc GenerateFunc) chan interface{} {
 	return source
 }
 
-func doMap(ctx context.Context, mapFunc MapFunc, source <-chan interface{}, collector chan<- interface{}, option *options) {
+func doMap[T any](ctx context.Context, mapFunc MapFunc[T], source <-chan T, collector chan<- T, option *options) {
 	waitGroup := sync.WaitGroup{}
 
 	defer func() {

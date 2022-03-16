@@ -18,11 +18,13 @@ package xtask
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRetry(t *testing.T) {
+
 	assert.NotNil(t, DoWithRetry(func() error {
 		return errors.New("")
 	}))

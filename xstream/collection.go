@@ -17,24 +17,24 @@
 package xstream
 
 // Group represents a group collector.
-type Group struct {
-	s      <-chan interface{}
-	f      KeyFunc
+type Group[T any] struct {
+	s      <-chan T
+	f      KeyFunc[T]
 	groups map[interface{}][]interface{}
 }
 
 // Input implements Collector.
-func (g *Group) Input(c <-chan interface{}) {
+func (g *Group[T]) Input(c <-chan T) {
 	g.s = c
 }
 
 // GroupBy returns a Group.
-func GroupBy(f KeyFunc) *Group {
-	return &Group{s: make(chan interface{}), f: f}
+func GroupBy[T any](f KeyFunc[T]) *Group[T] {
+	return &Group[T]{s: make(chan T), f: f}
 }
 
 // Map returns a map.
-func (g *Group) Map() map[interface{}][]interface{} {
+func (g *Group[T]) Map() map[interface{}][]interface{} {
 	if g.groups == nil {
 		g.groups = make(map[interface{}][]interface{})
 		for item := range g.s {

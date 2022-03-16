@@ -20,26 +20,26 @@ import "context"
 
 type (
 	// Reader is a read option.
-	Reader interface {
-		Read() (val interface{}, success bool)
+	Reader[T any] interface {
+		Read() (val T, success bool)
 	}
 	// ReadBarrier is a read barrier.
-	ReadBarrier struct {
+	ReadBarrier[T any] struct {
 		ctx         context.Context
-		readChannel <-chan interface{}
+		readChannel <-chan T
 	}
 )
 
 // NewReadBarrier returns a NewReadBarrier.
-func NewReadBarrier(ctx context.Context, readChannel <-chan interface{}) *ReadBarrier {
-	return &ReadBarrier{ctx: ctx, readChannel: readChannel}
+func NewReadBarrier[T any](ctx context.Context, readChannel <-chan T) *ReadBarrier[T] {
+	return &ReadBarrier[T]{ctx: ctx, readChannel: readChannel}
 }
 
 // Read data from the readChannel channel.
-func (r *ReadBarrier) Read() (val interface{}, success bool) {
+func (r *ReadBarrier[T]) Read() (val T, success bool) {
 	select {
 	case <-r.ctx.Done():
-		return nil, false
+		return
 	default:
 		return <-r.readChannel, true
 	}

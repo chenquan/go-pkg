@@ -22,26 +22,26 @@ import (
 
 type (
 	// Writer is a write option.
-	Writer interface {
-		Write(v interface{}) (success bool)
+	Writer[T any] interface {
+		Write(v T) (success bool)
 	}
 	// WriteBarrier is a write barrier.
-	WriteBarrier struct {
+	WriteBarrier[T any] struct {
 		ctx          context.Context
-		writeChannel chan<- interface{}
+		writeChannel chan<- T
 	}
 )
 
 // NewWriteBarrier returns a WriteBarrier.
-func NewWriteBarrier(ctx context.Context, writeChannel chan<- interface{}) *WriteBarrier {
-	return &WriteBarrier{
+func NewWriteBarrier[T any](ctx context.Context, writeChannel chan<- T) *WriteBarrier[T] {
+	return &WriteBarrier[T]{
 		ctx:          ctx,
 		writeChannel: writeChannel,
 	}
 }
 
 // Write the value to the writeChannel channel.
-func (w *WriteBarrier) Write(v interface{}) (success bool) {
+func (w *WriteBarrier[T]) Write(v T) (success bool) {
 	select {
 	case <-w.ctx.Done():
 		return

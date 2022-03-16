@@ -16,25 +16,25 @@
 
 package xstream
 
-type ring struct {
-	elements []interface{}
+type ring[T any] struct {
+	elements []T
 	index    int
 }
 
 // newRing returns a ring object with the given size n.
-func newRing(n uint) *ring {
-	return &ring{elements: make([]interface{}, n)}
+func newRing[T any](n uint) *ring[T] {
+	return &ring[T]{elements: make([]T, n)}
 }
 
 // add adds v into r.
-func (r *ring) add(v interface{}) {
+func (r *ring[T]) add(v T) {
 
 	r.elements[r.index%len(r.elements)] = v
 	r.index++
 }
 
 // take all items from r.
-func (r *ring) take() []interface{} {
+func (r *ring[T]) take() []T {
 
 	var size int
 	var start int
@@ -46,7 +46,7 @@ func (r *ring) take() []interface{} {
 		size = r.index
 	}
 
-	elements := make([]interface{}, size)
+	elements := make([]T, size)
 	for i := 0; i < size; i++ {
 		elements[i] = r.elements[(start+i)%n]
 	}
