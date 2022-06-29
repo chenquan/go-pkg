@@ -18,40 +18,24 @@ package xworker
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorker(t *testing.T) {
-	worker := NewWorker(1)
+	worker := NewWorker(10)
 	group := sync.WaitGroup{}
-	k := 0
-	for i := 0; i < 10; i++ {
-		group.Add(1)
-		worker.Run(context.Background(), func() {
-
-			k++
-		}, func() {
-			group.Done()
-		})
-		assert.EqualValues(t, i+1, k)
-	}
-	group.Wait()
-
-	worker = NewWorker(10)
-	group = sync.WaitGroup{}
 	j := uint32(0)
 	for i := 0; i < 100; i++ {
 		group.Add(1)
 		worker.Run(context.Background(), func() {
-
 			atomic.AddUint32(&j, 1)
 		}, func() {
 			group.Done()
 		})
-
 	}
 	group.Wait()
 	assert.Equal(t, uint32(100), atomic.LoadUint32(&j))
