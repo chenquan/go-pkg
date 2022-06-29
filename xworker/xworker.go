@@ -18,6 +18,7 @@ package xworker
 
 import (
 	"context"
+
 	"github.com/chenquan/go-pkg/xtask"
 )
 
@@ -34,11 +35,14 @@ func NewWorker(size int) *Worker {
 // Run executes function with ctx control.
 func (w *Worker) Run(ctx context.Context, run func(), deferFunc func()) {
 	w.c <- struct{}{}
-	defer func() {
-		<-w.c
+
+	go func() {
+		_ = xtask.Do(ctx, func() error {
+			run()
+			return nil
+		}, func() {
+			deferFunc()
+			<-w.c
+		})
 	}()
-	_ = xtask.Do(ctx, func() error {
-		run()
-		return nil
-	}, deferFunc)
 }
